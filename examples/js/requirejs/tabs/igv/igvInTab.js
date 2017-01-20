@@ -38,8 +38,13 @@ require(['igv'], function (igv) {
                 }
             ]
         }; // options
+        $("#tabs").tabs({
+           create: function(event, ui){console.log(tabs.create)}
+           });
         console.log("about to createBrowser");
-        browser = igv.createBrowser(igvDiv, options);
-        $("#tabs").tabs();
+        setTimeout(function(){
+           $("#igvDiv").text(""); // remove any message
+           browser = igv.createBrowser(igvDiv, options);
+           }, 5000);
     }); // onready funcetion
 });
