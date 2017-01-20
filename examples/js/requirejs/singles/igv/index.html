@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>igv Require</title>
+
+<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.6/igv-1.0.6.css">
+
+<script data-main="app" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
+
+<style>
+#igvDiv{
+  border: 1px solid blue;
+  height:400px;
+  }
+</style>
+
+</head>
+
+<body>
+        
+<div class="row">
+   <div class="span16">
+      <div id="zzzigvDiv"></div>
+   </div>
+</div>
+ 
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-1">IGV</a></li>
+    <li><a href="#tabs-2">2</a></li>
+    <li><a href="#tabs-3">3</a></li>
+  </ul>
+  <div id="tabs-1">
+    <div id="igvDiv"></div>
+  </div>
+  <div id="tabs-2">
+    tab two
+  </div>
+  <div id="tabs-3">
+     tab three
+  </div>
+</div>
+
+
+</body>
+</html>

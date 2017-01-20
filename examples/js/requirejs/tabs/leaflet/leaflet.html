@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>leaflet tabs require</title>
+
+<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+<script data-main="leafletTab" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.2/require.min.js"></script>
+
+<style>
+#mapDiv{
+  border: 1px solid blue;
+  width: 1000px;
+  height: 1000px;
+  }
+</style>
+
+</head>
+
+<body>
+
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-1">1</a></li>
+    <li><a href="#tabs-2">seattle map</a></li>
+    <li><a href="#tabs-3">3</a></li>
+  </ul>
+  <div id="tabs-1">
+    tab one
+  </div>
+  <div id="tabs-2">
+    <div id="mapDiv"></div>
+  </div>
+  <div id="tabs-3">
+     tab three
+  </div>
+</div>
+
+
+</body>
+</html>
