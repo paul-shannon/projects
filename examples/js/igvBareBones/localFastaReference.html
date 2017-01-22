@@ -1,0 +1,44 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>igv experimehnts</title>
+  <script src='http://code.jquery.com/jquery-1.12.4.min.js'></script>
+  <script src='http://code.jquery.com/ui/1.12.1/jquery-ui.min.js'></script>
+  <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+  <script src='http://igv.org/web/release/1.0.6/igv-1.0.6.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+  <link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.6/igv-1.0.6.css">
+</head>
+
+<body>
+<div id="myDiv" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+<script type="text/javascript">
+  var browser;
+  
+ $(document).ready(function () {
+    var div, options;
+    div = $("#myDiv")[0];
+    options = {locus: "chr22:35797000-37893010",
+               reference: {
+                   fastaURL: "http://localhost:8005/chr22-hg19.fa.gz",
+                   cytobandURL: "http://localhost:8005/hg38cytoband.txt"
+                   },
+               tracks: [
+                   {url: "http://localhost:8005/sample_1805.bed",
+                    name: "1805",
+                    indexed: false,
+                     order: Number.MAX_VALUE,
+                     displayMode: "EXPANDED"
+                    }
+                 ]
+              }; // options
+        browser = igv.createBrowser(div, options);
+    });
+
+</script>
+
+</body>
+
+</html>

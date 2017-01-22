@@ -1,0 +1,84 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mef2c experiments</title>
+  <script src='http://code.jquery.com/jquery-1.12.4.min.js'></script>
+  <script src='http://code.jquery.com/ui/1.12.1/jquery-ui.min.js'></script>
+  <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+  <script src='http://igv.org/web/release/1.0.6/igv-1.0.6.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+  <link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.6/igv-1.0.6.css">
+</head>
+
+<body>
+<div id="myDiv" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+<script type="text/javascript">
+  var browser;
+  
+ $(document).ready(function () {
+    var div, options;
+    div = $("#myDiv")[0];
+    options = {//locus: "chr5:88717117-88904257",
+               //locus: "5:88,810,321-88,811,051",
+               //locus: "5:87,873,461-88,622,004",
+               locus: "5:88,621,548-88,999,827",
+            reference: {id: "geneSymbols_hg38",
+                fastaURL: "http://localhost/data/genomes/human_g1k_v37_decoy.fasta",
+                //cytobandURL: "http://localhost/data/annotations/hg38cytobandChrRemoved.txt",
+                //fastaURL: "http://localhost/data/hg38/GRCh38.p7.genome.fa"
+                //fastaURL: "http://igv.broadinstitute.org/genomes/seq/1kg_v37/human_g1k_v37_decoy.fasta",
+                //cytobandURL: "http://igv.broadinstitute.org/genomes/seq/b37/b37_cytoband.txt"
+                cytobandURL: "http://localhost/data/annotations/b37_cytoband.txt"
+                //cytobandURL: "http://localhost/data/annotations/hg38cytoband.txt"
+
+                },
+               //reference: {
+               //    fastaURL: "http://localhost/data/genomes/Homo_sapiens.GRCh38.dna.chromosome.5.fa.gz",
+               //    cytobandURL: "http://localhost/data/annotations/hg38cytoband.txt"
+               //    },
+               tracks: [
+                  //{name: "Genes",
+                      //url: "http://igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed",
+                      //index: "http://igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed.idx",
+                  //    url:   "http://localhost/data/annotations/gencode.v18.collapsed.bed",
+                  //    index: "http://localhost/data/annotations/gencode.v18.collapsed.bed.idx",
+                  //    displayMode: "EXPANDED"
+                  //    },
+                 {name: 'Gencode v24',
+                  //url: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz',
+                  //indexURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/data/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi',
+                  url: "http://localhost://data/hg38/gencode.v24.annotation.sorted.gtf.gz",
+                  indexURL: "http://localhost://data/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi",
+                  format: 'gtf',
+                  visibilityWindow: 1000000,
+                  displayMode: 'EXPANDED'
+                  },
+                 {name: 'geneSymbols_hg38',
+                  url: 'http://localhost/data/hg38/geneSymbolSearch.bed',
+                  indexed: false,
+                  searchable: true,
+                  //visibilityWindow: 5000000,
+                  displayMode: 'COLLAPSED',
+                  color: "#448844"
+                  },
+                 {name: "igap gwas",
+                  url: 'http://localhost/data/hg38/variants/igap.bed',
+                  indexed: false,
+                  searchable: true,
+                  //visibilityWindow: 5000000,
+                  displayMode: 'EXPANDED',
+                  color: "#884444"
+                  }
+                 
+                 ]
+              }; // options
+        browser = igv.createBrowser(div, options);
+    });
+
+</script>
+
+</body>
+
+</html>
