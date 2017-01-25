@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>igv in jquery tabs</title>
+
+<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.6/igv-1.0.6.css">
+<script src="http://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="http://igv.org/web/release/1.0.6/igv-1.0.6.js"></script>
+
+<script>
+
+$(function(){
+    igvDiv = $("#igvDiv");
+    options = {
+        palette: ["#00A0B0", "#6A4A3C", "#CC333F", "#EB6841"],
+        locus: "7:55,085,725-56,000,000",
+        reference: {id: "hg19",
+            fastaURL: "http://igv.broadinstitute.org/genomes/seq/1kg_v37/human_g1k_v37_decoy.fasta",
+            cytobandURL: "http://igv.broadinstitute.org/genomes/seq/b37/b37_cytoband.txt"
+        },
+        trackDefaults: {
+            bam: {coverageThreshold: 0.2,
+                coverageQualityWeight: true
+            }
+        },
+        tracks: [
+            {name: "Genes",
+                url: "http://igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed",
+                index: "http://igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed.idx",
+                displayMode: "EXPANDED"
+            }
+        ]
+    }; // options
+    console.log("about to createBrowser");
+    browser = igv.createBrowser(igvDiv, options);
+    //$("#tabs").tabs();
+    setTimeout(function() {$("#tabs").tabs()}, 1000);
+    });  // on ready
+
+</script>
+
+<style>
+#igvDiv{
+  border: 1px solid blue;
+  height:400px;
+  }
+</style>
+
+</head>
+
+<body>
+
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-2">2</a></li>
+    <li><a href="#tabs-1">IGV</a></li>
+  </ul>
+  <div id="tabs-1">
+    <div id="igvDiv"></div>
+  </div>
+  <div id="tabs-2">
+    tab two
+  </div>
+</div>
+
+
+</body>
+</html>
