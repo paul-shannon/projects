@@ -8,29 +8,34 @@ connect.socket(socket,"tcp://localhost:5557")
 #------------------------------------------------------------------------------------------------------------------------
 runTests <- function()
 {
-    test_ping()
+    test.ping()
+    test.createGeneModel()
 
 } # runTests
 #------------------------------------------------------------------------------------------------------------------------
-test_ping <- function()
+test.ping <- function()
 {
+   printf("--- test.ping")
    msg = list(cmd="ping", status="request", callback="", payload="");
    msg.json <- toJSON(msg)
    send.raw.string(socket, msg.json)
    response <- fromJSON(receive.string(socket))
    checkEquals(response$payload, "pong")
 
-} # test_ping
+} # test.ping
 #------------------------------------------------------------------------------------------------------------------------
-test_createGeneModel <- function()
+test.createGeneModel <- function()
 {
-   msg = list(cmd="createGeneModel", status="request", callback="",
+   printf("--- test.createGeneModel")
+
+   msg = list(cmd="createGeneModel", status="request", callback="displayGeneModel",
                payload=list(targetGene="VGF", footprintRegion="7:101,165,577-101,165,615"))
    msg.json <- toJSON(msg)
    send.raw.string(socket, msg.json)
    response <- fromJSON(receive.string(socket))
-   checkEquals(response$payload, "pong")
+   browser()
+   x <- 99
 
 
-} # test_createGeneModel
+} # test.createGeneModel
 #------------------------------------------------------------------------------------------------------------------------

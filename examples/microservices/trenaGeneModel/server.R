@@ -16,52 +16,6 @@ footprint.db.uri <- "postgres://whovian/brain_hint"        # has hits and region
 if(!exists("fpf"))
    fpf <- FootprintFinder(genome.db.uri, footprint.db.uri, quiet=TRUE)
 #------------------------------------------------------------------------------------------------------------------------
-getTSSTable <- function()
-{
-   db.gtf <- dbConnect(PostgreSQL(), user= "trena", password="trena", dbname="gtf", host="whovian")
-   query <- "select * from hg38human where moleculetype='gene' and gene_biotype='protein_coding'"
-   tbl <- dbGetQuery(db.gtf, query) [, c("chr", "gene_name", "start", "endpos", "strand")]
-
-} # getTSSTable
-#------------------------------------------------------------------------------------------------------------------------
-if(!exists("tbl.tss"))
-    tbl.tss <- getTSSTable()
-#------------------------------------------------------------------------------------------------------------------------
-if(!interactive()) {
-   context = init.context()
-   socket = init.socket(context,"ZMQ_REP")
-   bind.socket(socket,"tcp://*:5557")
-   while(TRUE) {
-      printf("top of receive/send loop")
-      raw.message <- receive.string(socket)
-      msg = fromJSON(raw.message)
-      printf("cmd: %s", msg$cmd)
-      if(msg$cmd == "ping") {
-          response <- list(cmd=msg$callack, status="result", callback="", payload="pong")
-          }
-      else if(msg$cmd == "upcase") {
-          response <- list(cmd=msg$callack, status="result", callback="", payload=toupper(msg$payload))
-          }
-      else if(msg$cmd == "getTestNetwork"){
-         infile <- file("vgfModel.json")
-         graphModel <- fromJSON(readLines(infile))
-         response <- list(cmd=msg$callback, status="result", callback="", payload=graphModel)
-         }
-      else if(msg$cmd == "createGeneModel"){
-         targetGene <- msg$payload$targetGene;
-         footprintRegion <- msg$payload$footprintRegion;
-         createGeneModel(targetGene, footprintRegion)
-         response <- list(cmd=msg$callback, status="result", callback="", payload=text)
-         }
-      else {
-         response <- list(cmd="handleUnrecognizedCommand", status="error", callback="", payload=toupper(raw.message))
-         }
-      send.raw.string(socket, toJSON(response))
-      Sys.sleep(1)
-      } # while (TRUE)
-
-} # if !interactive()
-#------------------------------------------------------------------------------------------------------------------------
 runTests <- function()
 {
   test.extractChromStartEndFromChromLocString()
@@ -386,6 +340,95 @@ test.tableToFullGraph <- function()
 
 } # test.tableToFullGraph
 #------------------------------------------------------------------------------------------------------------------------
+# {elements: [
+#    {data: {id: 'a', score:5}, position: {x: 100, y: 200}},
+#    {data: {id: 'b', score:100}, position: {x: 200, y: 200}},
+#    {data: {id: 'e1', source: 'a', target: 'b'}}
+#    ],  // elements array
+# layout: { name: 'preset'},
+# style: [{selector: 'node', style: {'content': 'data(id)'}}]
+# }
+graphToJSON <- function(g)
+{
+    x <- '{"elements": [';
+    nodes <- nodes(g)
+    edgeNames <- edgeNames(g)
+    edges <- strsplit(edgeNames, "~")  # a list of pairs
+    edgeNames <- sub("~", "->", edgeNames)
+    names(edges) <- edgeNames
+
+    noa <- names(nodeDataDefaults(g))
+    eda <- names(edgeDataDefaults(g))
+    nodeCount <- length(nodes)
+
+    for(n in 1:nodeCount){
+       node <- nodes[n]
+       x <- sprintf('%s {"data": {"id": "%s"}}', x, node);
+       if(n != nodeCount)
+           x <- sprintf("%s,", x)
+       }
+
+    edgeCount <- 0
+    for(edge in edges){
+       edgeCount <- edgeCount + 1;
+       edgeName <- edgeNames[edgeCount]
+       x <- sprintf('%s, {"data": {"id": "%s", "source": "%s", "target": "%s"}}', x, edgeName, edge[[1]], edge[[2]])
+       }
+    #browser()
+
+    x <- sprintf("%s]}", x)
+
+    x
+
+} # graphToJSON
+#------------------------------------------------------------------------------------------------------------------------
+test.graphToJSON <- function()
+{
+   printf("--- test.graphToJSON")
+   g <- graphNEL(edgemode='directed')
+   nodeDataDefaults(g, attr='label') <- 'default node label'
+   nodeDataDefaults(g, attr='type') <- 'default node label'
+   edgeDataDefaults(g, attr='edgeType') <- 'undefined'
+
+   g <- graph::addNode('A', g)
+
+     # start with a simple single-node graph, no edges
+   g.json <- graphToJSON(g)
+   g.reclaimed <- fromJSON(g.json)
+   checkEquals(g.reclaimed$elements$data$id[1], "A")
+
+     # now 3 nodes, still no edges
+   g <- graph::addNode('B', g)
+   g <- graph::addNode('C', g)
+   g.json <- graphToJSON(g)
+   g.reclaimed <- fromJSON(g.json)
+
+   checkEquals(g.reclaimed$elements$data$id, c("A", "B", "C"))
+
+   all.nodes <- nodes(g)
+   nodeData(g, c('A', 'B', 'C'), 'type') <- c('kinase', 'transcription factor', 'glycoprotein')
+   nodeData(g, all.nodes, 'label') <- all.nodes
+
+     # now add 1 edge
+   g <- graph::addEdge('A', 'B', g)
+   g.json <- graphToJSON(g)
+   g.reclaimed <- fromJSON(g.json)
+
+   checkEquals(g.reclaimed$elements$data$id, c("A", "B", "C"))
+
+   g <- graph::addEdge('B', 'C', g)
+   g <- graph::addEdge('C', 'A', g)
+
+   edgeData(g, 'A', 'B', 'edgeType') <- 'phosphorylates'
+   edgeData(g, 'B', 'C', 'edgeType') <- 'synthetic lethal'
+
+   g.json <- graphToJSON(g)
+   browser()
+   x <- 99
+
+} # test.graphToJSON
+#------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------
 graphnelToCyjsJSON <- function (graph) {
 
   igraphobj <- igraph::igraph.from.graphNEL(graph)
@@ -444,7 +487,8 @@ graphnelToCyjsJSON <- function (graph) {
   el = list(nodes=nds, edges=eds)
 
   x <- list(data = graph_attr, elements = el)
-  return (toJSON(x))
+  #return (toJSON(x))
+  return(x)
 
 } # graphnelToCyjsJSON
 #----------------------------------------------------------------------------------------------------
@@ -515,6 +559,66 @@ test.graphnelToCyjsJSON <- function()
 
 }  # test.graphnelToCyjsJSON
 #----------------------------------------------------------------------------------------------------
+getTSSTable <- function()
+{
+   db.gtf <- dbConnect(PostgreSQL(), user= "trena", password="trena", dbname="gtf", host="whovian")
+   query <- "select * from hg38human where moleculetype='gene' and gene_biotype='protein_coding'"
+   tbl <- dbGetQuery(db.gtf, query) [, c("chr", "gene_name", "start", "endpos", "strand")]
+
+} # getTSSTable
+#------------------------------------------------------------------------------------------------------------------------
+if(!exists("tbl.tss"))
+    tbl.tss <- getTSSTable()
+#------------------------------------------------------------------------------------------------------------------------
+if(!interactive()) {
+   context = init.context()
+   socket = init.socket(context,"ZMQ_REP")
+   bind.socket(socket,"tcp://*:5557")
+   while(TRUE) {
+      printf("top of receive/send loop")
+      raw.message <- receive.string(socket)
+      msg = fromJSON(raw.message)
+      printf("cmd: %s", msg$cmd)
+      print(msg)
+      if(msg$cmd == "ping") {
+          response <- list(cmd=msg$callack, status="result", callback="", payload="pong")
+          }
+      else if(msg$cmd == "upcase") {
+          response <- list(cmd=msg$callack, status="result", callback="", payload=toupper(msg$payload))
+          }
+      else if(msg$cmd == "getTestNetwork"){
+         infile <- file("vgfModel.json")
+         graphModel <- fromJSON(readLines(infile))
+         response <- list(cmd=msg$callback, status="result", callback="", payload=graphModel)
+         }
+      else if(msg$cmd == "createGeneModel"){
+         print(1)
+         targetGene <- msg$payload$targetGene;
+         print(2)
+         footprintRegion <- msg$payload$footprintRegion;
+         print(3)
+         tbl.gm <- createGeneModel(targetGene, footprintRegion)
+         print(4)
+         tbl.list <- list(tbl.gm)
+         print(5)
+         names(tbl.list) <- targetGene
+         print(6)
+         graph <- tableToFullGraph(tbl.list)
+         print(7)
+         #json <- graphnelToCyjsJSON(graph)
+         json.string <- graphToJSON(graph)
+         print(8)
+         response <- list(cmd=msg$callback, status="success", callback="", payload=json.string)
+         }
+      else {
+         response <- list(cmd="handleUnrecognizedCommand", status="error", callback="", payload=toupper(raw.message))
+         }
+      send.raw.string(socket, toJSON(response))
+      Sys.sleep(1)
+      } # while (TRUE)
+
+} # if !interactive()
+#------------------------------------------------------------------------------------------------------------------------
 #   tbl <- createModel(target.gene, promoter.shoulder=100,
 #                      mtx.expression=mtx.rosmap,
 #                      #mtx.expression=mtx.mayoTCX,
