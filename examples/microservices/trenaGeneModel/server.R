@@ -357,24 +357,45 @@ graphToJSON <- function(g)
     edgeNames <- sub("~", "->", edgeNames)
     names(edges) <- edgeNames
 
-    noa <- names(nodeDataDefaults(g))
-    eda <- names(edgeDataDefaults(g))
+    noa.names <- names(nodeDataDefaults(g))
+    eda.names <- names(edgeDataDefaults(g))
     nodeCount <- length(nodes)
+    edgeCount <- length(edgeNames)
 
     for(n in 1:nodeCount){
        node <- nodes[n]
-       x <- sprintf('%s {"data": {"id": "%s"}}', x, node);
+       x <- sprintf('%s {"data": {"id": "%s"', x, node);
+       nodeAttributeCount <- length(noa.names)
+       for(i in seq_len(nodeAttributeCount)){
+          noa.name <- noa.names[i];
+          value <-  nodeData(g, node, noa.name)[[1]]
+          if(is.numeric(value))
+             x <- sprintf('%s, "%s": %s', x, noa.name, value)
+          else
+             x <- sprintf('%s, "%s": "%s"', x, noa.name, value)
+          } # for noa.name
+       x <- sprintf('%s}}', x)     # close off this node data element
        if(n != nodeCount)
-           x <- sprintf("%s,", x)
-       }
+           x <- sprintf("%s,", x)  # another node coming, add a comma
+       } # for n
 
-    edgeCount <- 0
-    for(edge in edges){
-       edgeCount <- edgeCount + 1;
-       edgeName <- edgeNames[edgeCount]
-       x <- sprintf('%s, {"data": {"id": "%s", "source": "%s", "target": "%s"}}', x, edgeName, edge[[1]], edge[[2]])
-       }
-    #browser()
+    for(e in seq_len(edgeCount)) {
+       edgeName <- edgeNames[e]
+       edge <- edges[[e]]
+       sourceNode <- edge[[1]]
+       targetNode <- edge[[2]]
+       x <- sprintf('%s, {"data": {"id": "%s", "source": "%s", "target": "%s"', x, edgeName, sourceNode, targetNode);
+       edgeAttributeCount <- length(eda.names)
+       for(i in seq_len(edgeAttributeCount)){
+          eda.name <- eda.names[i];
+          value <-  edgeData(g, sourceNode, targetNode, eda.name)[[1]]
+          if(is.numeric(value))
+             x <- sprintf('%s, "%s": %s', x, eda.name, value)
+          else
+             x <- sprintf('%s, "%s": "%s"', x, eda.name, value)
+          } # for each edgeAttribute
+       x <- sprintf('%s}}', x)     # close off this edge data element
+       } # for e
 
     x <- sprintf("%s]}", x)
 
@@ -386,45 +407,53 @@ test.graphToJSON <- function()
 {
    printf("--- test.graphToJSON")
    g <- graphNEL(edgemode='directed')
+
    nodeDataDefaults(g, attr='label') <- 'default node label'
    nodeDataDefaults(g, attr='type') <- 'default node label'
+   nodeDataDefaults(g, attr='count') <- 0
+   nodeDataDefaults(g, attr='score') <- 0.0
+
    edgeDataDefaults(g, attr='edgeType') <- 'undefined'
+   edgeDataDefaults(g, attr='count') <- 0
+   edgeDataDefaults(g, attr='score') <- 0.0
 
    g <- graph::addNode('A', g)
-
-     # start with a simple single-node graph, no edges
-   g.json <- graphToJSON(g)
-   g.reclaimed <- fromJSON(g.json)
-   checkEquals(g.reclaimed$elements$data$id[1], "A")
-
-     # now 3 nodes, still no edges
    g <- graph::addNode('B', g)
    g <- graph::addNode('C', g)
-   g.json <- graphToJSON(g)
-   g.reclaimed <- fromJSON(g.json)
-
-   checkEquals(g.reclaimed$elements$data$id, c("A", "B", "C"))
 
    all.nodes <- nodes(g)
-   nodeData(g, c('A', 'B', 'C'), 'type') <- c('kinase', 'transcription factor', 'glycoprotein')
+   nodeData(g, c('A', 'B', 'C'), 'type') <- c('t_one', 't_two', 't_three')
    nodeData(g, all.nodes, 'label') <- all.nodes
+   nodeData(g, all.nodes, 'score') <- runif(3, 0, 1)
+   nodeData(g, all.nodes, 'count') <- sample(1:10, 3)
 
      # now add 1 edge
    g <- graph::addEdge('A', 'B', g)
-   g.json <- graphToJSON(g)
-   g.reclaimed <- fromJSON(g.json)
-
-   checkEquals(g.reclaimed$elements$data$id, c("A", "B", "C"))
-
    g <- graph::addEdge('B', 'C', g)
    g <- graph::addEdge('C', 'A', g)
 
-   edgeData(g, 'A', 'B', 'edgeType') <- 'phosphorylates'
-   edgeData(g, 'B', 'C', 'edgeType') <- 'synthetic lethal'
+   edgeData(g, 'A', 'B', 'edgeType') <- 'et_one'
+   edgeData(g, 'B', 'C', 'edgeType') <- 'et_two'
+
+   edgeData(g, 'A', 'B', 'score') <- runif(1, 0, 1)
+   edgeData(g, 'C', 'A', 'score') <- runif(1, 0, 1)
+
+   edgeData(g, 'B', 'C', 'count') <- sample(1:10, 1)
+   edgeData(g, 'C', 'A', 'count') <- sample(1:10, 1)
 
    g.json <- graphToJSON(g)
-   browser()
-   x <- 99
+      # a pretty good check, but only an assist to the real test, which is to load this the
+      # browser with cy.json(JSON.parse(<g.json string>))
+
+   tbl <- fromJSON(g.json)[[1]][[1]]
+   checkEquals(nrow(tbl), length(nodes(g)) + length(edgeNames(g)))
+   checkEquals(colnames(tbl), c("id", "label", "type", "count", "score", "source", "target", "edgeType"))
+   checkEquals(unlist(lapply(tbl, class), use.names=FALSE),
+               c("character", "character", "character", "integer", "numeric", "character", "character", "character"))
+   checkEquals(tbl$type[1:3], c("t_one", "t_two", "t_three"))
+   checkEquals(tbl$edgeType[4:6], c("et_one", "et_two", "undefined"))
+
+
 
 } # test.graphToJSON
 #------------------------------------------------------------------------------------------------------------------------
