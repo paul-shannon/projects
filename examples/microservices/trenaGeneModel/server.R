@@ -377,6 +377,13 @@ graphToJSON <- function(g)
              x <- sprintf('%s, "%s": "%s"', x, noa.name, value)
           } # for noa.name
        x <- sprintf('%s}', x)     # close off this node data element
+       if(all(c("xPos", "yPos") %in% noa.names)){
+           xPos <- as.numeric(nodeData(g, node, "xPos"));
+           yPos <- as.numeric(nodeData(g, node, "yPos"))
+           x <- sprintf('%s, "position": {"x": %d, "y": %d}', x, xPos, yPos)
+           #browser()
+           #xyz <- 99
+           } # add position element
        x <- sprintf('%s}', x)     # close off this node data element
        if(n != nodeCount)
            x <- sprintf("%s,", x)  # another node coming, add a comma
@@ -464,14 +471,14 @@ addGeneModelLayout <- function(g)
    tf.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "TF")]
    targetGene.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "targetGene")]
 
-   nodeData(g, fp.nodes, "xPos") <- nodeData(g, fp.nodes, attr="distance")
+   nodeData(g, fp.nodes, "xPos") <- as.numeric(nodeData(g, fp.nodes, attr="distance")) * 10
    nodeData(g, fp.nodes, "yPos") <- 0
 
    nodeData(g, tf.nodes, "xPos") <- 0
-   nodeData(g, tf.nodes, "yPos") <- 50
+   nodeData(g, tf.nodes, "yPos") <- 400
 
    nodeData(g, targetGene.nodes, "xPos") <- 0
-   nodeData(g, targetGene.nodes, "yPos") <- -50
+   nodeData(g, targetGene.nodes, "yPos") <- -500
 
    g
 
@@ -489,7 +496,34 @@ test.addGeneModelLayout <- function()
    g2 <- tableToFullGraph(tbl.list)
    g2.pos <- addGeneModelLayout(g2)
    g2.json <- graphToJSON(g2.pos)
+   tbl <- fromJSON(g2.json)[[1]][[1]]
 
+   checkEquals(nrow(tbl), length(nodes(g2)) + length(edgeNames(g2)))
+   checkEquals(colnames(tbl),
+           c("id", "type", "label", "distance", "gene.cor", "beta", "purity", "xPos", "yPos", "source", "target", "edgeType"))
+
+   checkEquals(unlist(lapply(tbl, class), use.names=FALSE),
+               c("character", "character", "character", "integer", "numeric", "numeric", "numeric", "integer", "integer",
+                 "character", "character", "character"))
+
+   checkEquals(tbl$type[1:3], c("targetGene", "TF", "TF"))
+   checkEquals(tbl$edgeType[6:9], c("bindsTo", "bindsTo", "regulatorySiteFor", "regulatorySiteFor"))
+
+   checkEquals(tbl$edgeType[4:6], c("et_one", "et_two", "undefined"))
+
+      # now a larger graph
+
+   region <- "7:101,165,600-101,165,700"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
+   region <- "7:101,165,560-101,165,630"
+   target.gene <- "VGF"
+   tbl.gm <- createGeneModel(target.gene, region)
+   tbl.list <- list(tbl.gm)
+   names(tbl.list) <- target.gene
+
+   g2 <- tableToFullGraph(tbl.list)
+   g2.pos <- addGeneModelLayout(g2)
+   g2.json <- graphToJSON(g2.pos)
+   print(g2.json)
 
 } # test.addGeneModelLayout
 #------------------------------------------------------------------------------------------------------------------------
@@ -669,8 +703,9 @@ if(!interactive()) {
          print(6)
          graph <- tableToFullGraph(tbl.list)
          print(7)
+         graph.pos <- addGeneModelLayout(graph)
          #json <- graphnelToCyjsJSON(graph)
-         json.string <- graphToJSON(graph)
+         json.string <- graphToJSON(graph.pos)
          print(8)
          response <- list(cmd=msg$callback, status="success", callback="", payload=json.string)
          }
