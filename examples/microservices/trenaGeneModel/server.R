@@ -226,6 +226,8 @@ tableToFullGraph <- function(tbl.list)
    nodeDataDefaults(g, attr = "gene.cor") <- 0
    nodeDataDefaults(g, attr = "beta") <- 0
    nodeDataDefaults(g, attr = "purity") <- 0
+   nodeDataDefaults(g, attr = "xPos") <- 0
+   nodeDataDefaults(g, attr = "yPos") <- 0
 
    edgeDataDefaults(g, attr = "edgeType") <- "undefined"
    edgeDataDefaults(g, attr = "beta") <- 0
@@ -374,7 +376,8 @@ graphToJSON <- function(g)
           else
              x <- sprintf('%s, "%s": "%s"', x, noa.name, value)
           } # for noa.name
-       x <- sprintf('%s}}', x)     # close off this node data element
+       x <- sprintf('%s}', x)     # close off this node data element
+       x <- sprintf('%s}', x)     # close off this node data element
        if(n != nodeCount)
            x <- sprintf("%s,", x)  # another node coming, add a comma
        } # for n
@@ -453,10 +456,42 @@ test.graphToJSON <- function()
    checkEquals(tbl$type[1:3], c("t_one", "t_two", "t_three"))
    checkEquals(tbl$edgeType[4:6], c("et_one", "et_two", "undefined"))
 
-
-
 } # test.graphToJSON
 #------------------------------------------------------------------------------------------------------------------------
+addGeneModelLayout <- function(g)
+{
+   fp.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "footprint")]
+   tf.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "TF")]
+   targetGene.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "targetGene")]
+
+   nodeData(g, fp.nodes, "xPos") <- nodeData(g, fp.nodes, attr="distance")
+   nodeData(g, fp.nodes, "yPos") <- 0
+
+   nodeData(g, tf.nodes, "xPos") <- 0
+   nodeData(g, tf.nodes, "yPos") <- 50
+
+   nodeData(g, targetGene.nodes, "xPos") <- 0
+   nodeData(g, targetGene.nodes, "yPos") <- -50
+
+   g
+
+} # addGeneModelLayout
+#------------------------------------------------------------------------------------------------------------------------
+test.addGeneModelLayout <- function()
+{
+   printf("--- test.addGeneModelLayout")
+   region <- "7:101,165,571-101,165,620"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
+   target.gene <- "VGF"
+   tbl.gm <- createGeneModel(target.gene, region)
+   tbl.list <- list(tbl.gm)
+   names(tbl.list) <- target.gene
+
+   g2 <- tableToFullGraph(tbl.list)
+   g2.pos <- addGeneModelLayout(g2)
+   g2.json <- graphToJSON(g2.pos)
+
+
+} # test.addGeneModelLayout
 #------------------------------------------------------------------------------------------------------------------------
 graphnelToCyjsJSON <- function (graph) {
 
