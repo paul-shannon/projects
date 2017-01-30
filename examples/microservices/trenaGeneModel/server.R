@@ -7,7 +7,7 @@ library(TReNA)
 library(stringr)
 library(graph)
 library(RUnit)
-library(igraph)
+#library(igraph)
 #------------------------------------------------------------------------------------------------------------------------
 load("~/github/BDDS/trenadb/src/coryADpresentationNov2016/rosmap_counts_matrix_normalized_geneSymbols_25031x638.RData")
 mtx.expression <- asinh(mtx)
@@ -22,7 +22,10 @@ runTests <- function()
   test.createGeneModel();
   test.tableToReducedGraph()
   test.tableToFullGraph()
-  test.graphnelToCyjsJSON()
+  #test.graphnelToCyjsJSON()
+
+  test.graphToJSON()
+  test.addGeneModelLayout()
 
 }  # runTests
 #------------------------------------------------------------------------------------------------------------------------
@@ -44,7 +47,7 @@ extractChromStartEndFromChromLocString <- function(chromlocString)
 #------------------------------------------------------------------------------------------------------------------------
 test.extractChromStartEndFromChromLocString <- function()
 {
-   print("--- test.extractChromStartEndFromChromLocString")
+   printf("--- test.extractChromStartEndFromChromLocString")
    checkEquals(extractChromStartEndFromChromLocString("7:1010165577-101165615"),
                list(chrom="chr7", start=1010165577, end=101165615))
 
@@ -378,8 +381,8 @@ graphToJSON <- function(g)
           } # for noa.name
        x <- sprintf('%s}', x)     # close off this node data element
        if(all(c("xPos", "yPos") %in% noa.names)){
-           xPos <- as.numeric(nodeData(g, node, "xPos"));
-           yPos <- as.numeric(nodeData(g, node, "yPos"))
+           xPos <- as.integer(nodeData(g, node, "xPos"))
+           yPos <- as.integer(nodeData(g, node, "yPos"))
            x <- sprintf('%s, "position": {"x": %d, "y": %d}', x, xPos, yPos)
            #browser()
            #xyz <- 99
@@ -474,8 +477,16 @@ addGeneModelLayout <- function(g)
    nodeData(g, fp.nodes, "xPos") <- as.numeric(nodeData(g, fp.nodes, attr="distance")) * 10
    nodeData(g, fp.nodes, "yPos") <- 0
 
-   nodeData(g, tf.nodes, "xPos") <- 0
-   nodeData(g, tf.nodes, "yPos") <- 400
+   tfs <- names(which(nodeData(g, attr="type") == "TF"))
+
+   for(tf in tfs){
+      footprint.neighbors <- edges(g)[[tf]]
+      footprint.positions <- as.integer(nodeData(g, footprint.neighbors, attr="xPos"))
+      new.xPos <- mean(footprint.positions)
+      #printf("%8s: %5d", tf, new.xPos)
+      nodeData(g, tf, "xPos") <- new.xPos
+      nodeData(g, tf, "yPos") <- sample(300:500, 1)
+      } # for tf
 
    nodeData(g, targetGene.nodes, "xPos") <- 0
    nodeData(g, targetGene.nodes, "yPos") <- -500
@@ -495,6 +506,11 @@ test.addGeneModelLayout <- function()
 
    g2 <- tableToFullGraph(tbl.list)
    g2.pos <- addGeneModelLayout(g2)
+
+     # non-brittle, non-specific test: these xPos values are assigned by averaging, should not be zero
+   checkTrue(nodeData(g2.pos, attr='xPos', n='MAZ')[[1]] != 0)
+   checkTrue(nodeData(g2.pos, attr='xPos', n='NRF1')[[1]] != 0)
+
    g2.json <- graphToJSON(g2.pos)
    tbl <- fromJSON(g2.json)[[1]][[1]]
 
@@ -509,7 +525,7 @@ test.addGeneModelLayout <- function()
    checkEquals(tbl$type[1:3], c("targetGene", "TF", "TF"))
    checkEquals(tbl$edgeType[6:9], c("bindsTo", "bindsTo", "regulatorySiteFor", "regulatorySiteFor"))
 
-   checkEquals(tbl$edgeType[4:6], c("et_one", "et_two", "undefined"))
+   checkEquals(tbl$edgeType[6:9], c("bindsTo", "bindsTo", "regulatorySiteFor", "regulatorySiteFor"))
 
       # now a larger graph
 
@@ -523,7 +539,9 @@ test.addGeneModelLayout <- function()
    g2 <- tableToFullGraph(tbl.list)
    g2.pos <- addGeneModelLayout(g2)
    g2.json <- graphToJSON(g2.pos)
-   print(g2.json)
+     # very crude test
+   checkTrue(nchar(g2.json) > 20000)
+   checkTrue(grepl("VGF", g2.json))
 
 } # test.addGeneModelLayout
 #------------------------------------------------------------------------------------------------------------------------
