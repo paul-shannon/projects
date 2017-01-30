@@ -474,8 +474,21 @@ addGeneModelLayout <- function(g)
    tf.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "TF")]
    targetGene.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "targetGene")]
 
-   nodeData(g, fp.nodes, "xPos") <- as.numeric(nodeData(g, fp.nodes, attr="distance")) * 10
+     # add in a zero in case all of the footprints are up or downstream of the 0 coordinate, the TSS
+   span.endpoints <- range(c(0, as.numeric(nodeData(g, fp.nodes, attr="distance"))))
+   span <- max(span.endpoints) - min(span.endpoints)
+   footprintLayoutFactor <- 1
+   if(span < 600)  #
+       footprintLayoutFactor <- 600/span
+
+
+   nodeData(g, fp.nodes, "xPos") <- as.numeric(nodeData(g, fp.nodes, attr="distance")) * footprintLayoutFactor
    nodeData(g, fp.nodes, "yPos") <- 0
+
+   adjusted.span.endpoints <- range(c(0, as.numeric(nodeData(g, fp.nodes, attr="xPos"))))
+   printf("raw span of footprints: %d   footprintLayoutFactor: %f  new span: %d",
+          span, footprintLayoutFactor, abs(max(adjusted.span.endpoints) - min(adjusted.span.endpoints)))
+
 
    tfs <- names(which(nodeData(g, attr="type") == "TF"))
 
@@ -485,11 +498,11 @@ addGeneModelLayout <- function(g)
       new.xPos <- mean(footprint.positions)
       #printf("%8s: %5d", tf, new.xPos)
       nodeData(g, tf, "xPos") <- new.xPos
-      nodeData(g, tf, "yPos") <- sample(300:500, 1)
+      nodeData(g, tf, "yPos") <- sample(300:1200, 1)
       } # for tf
 
    nodeData(g, targetGene.nodes, "xPos") <- 0
-   nodeData(g, targetGene.nodes, "yPos") <- -500
+   nodeData(g, targetGene.nodes, "yPos") <- -200
 
    g
 
@@ -533,6 +546,25 @@ test.addGeneModelLayout <- function()
    region <- "7:101,165,560-101,165,630"
    target.gene <- "VGF"
    tbl.gm <- createGeneModel(target.gene, region)
+   tbl.list <- list(tbl.gm)
+   names(tbl.list) <- target.gene
+
+   g2 <- tableToFullGraph(tbl.list)
+   g2.pos <- addGeneModelLayout(g2)
+   g2.json <- graphToJSON(g2.pos)
+     # very crude test
+   checkTrue(nchar(g2.json) > 20000)
+   checkTrue(grepl("VGF", g2.json))
+
+     # now a 2kb region, to test that the footprint positions are left alone (not scaled up to spread them out)
+
+   region <- "7:101,165,000-101,167,000"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
+   target.gene <- "VGF"
+   tbl.gm <- createGeneModel(target.gene, region)
+     # make sure the footprint distance span is wide enough to avoid scaling up
+   span.fp <- range(tbl.gm$distance)
+   checkTrue(max(span.fp) - min(span.fp) > 1000)
+
    tbl.list <- list(tbl.gm)
    names(tbl.list) <- target.gene
 
