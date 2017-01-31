@@ -64,6 +64,8 @@ test.extractChromStartEndFromChromLocString <- function()
 #------------------------------------------------------------------------------------------------------------------------
 createGeneModel <- function(target.gene, region)
 {
+   printf("--- createGeneModel for %s, %s", target.gene, region)
+
    absolute.lasso.beta.min <- 0.2
    absolute.expression.correlation.min <- 0.2
    randomForest.purity.min <- 1.0
@@ -72,6 +74,8 @@ createGeneModel <- function(target.gene, region)
    chrom <- region.parsed$chrom
    start <- region.parsed$start
    end <-   region.parsed$end
+   printf("region parsed: %s:%d-%d", chrom, start, end);
+
 
    tbl.fp <- getFootprintsInRegion(fpf, chrom, start, end)
    if(nrow(tbl.fp) == 0){
@@ -79,6 +83,8 @@ createGeneModel <- function(target.gene, region)
        return(NA)
        }
 
+   printf("range in which fps are requested: %d", end - start)
+   printf("range in which fps are reported:  %d", max(tbl.fp$start) - min(tbl.fp$start))
    tbl.fp <- mapMotifsToTFsMergeIntoTable(fpf, tbl.fp)
    candidate.tfs <- sort(unique(tbl.fp$tf))
    candidate.tfs <- intersect(rownames(mtx.expression), candidate.tfs)
@@ -119,14 +125,18 @@ createGeneModel <- function(target.gene, region)
    # footprint.start <- unlist(lapply(rownames(tbl.04), function(gene) subset(tbl.fp, tfe==gene)$start[1]))
 
    gene.info <- subset(tbl.tss, gene_name==target.gene)[1,]
+
    if(gene.info$strand  == "+"){
       gene.start <- gene.info$start
       tbl.04$distance <- gene.start - tbl.04$start
    }else{
-      gene.start <- gene.info$end
+      gene.start <- gene.info$endpos
       tbl.04$distance <-  tbl.04$start - gene.start
+      #tbl.04$distance <-  tbl.04$start - gene.start
       }
 
+   printf("after distances calculated, distances to %s tss:  %d - %d", target.gene, min(tbl.04$distance), max(tbl.04$distance))
+   print(gene.info)
    tbl.04
 
 } # createGeneModel
@@ -140,6 +150,11 @@ test.createGeneModel <- function()
    checkEquals(dim(tbl.gm), c(2,6))
    checkEquals(colnames(tbl.gm), c("gene", "gene.cor", "beta", "IncNodePurity", "start", "distance"))
    checkEquals(sort(tbl.gm$gene), c("MAZ", "NRF1"))
+
+     # try a gene on the minus strand
+   target.gene <- "MEF2C"
+   region <- "5:88,904,000-88,909,000"
+   tbl.gm <- createGeneModel(target.gene, region)
 
 } # test.createGeneModel
 #------------------------------------------------------------------------------------------------------------------------
@@ -222,6 +237,7 @@ test.tableToReducedGraph <- function()
 #------------------------------------------------------------------------------------------------------------------------
 tableToFullGraph <- function(tbl.list)
 {
+   printf("--- tableToFullGraph")
    g <- graphNEL(edgemode = "directed")
    nodeDataDefaults(g, attr = "type") <- "undefined"
    nodeDataDefaults(g, attr = "label") <- "default node label"
@@ -246,6 +262,7 @@ tableToFullGraph <- function(tbl.list)
             sprintf("%s.fp.upstream.%05d", target.gene, x)))
 
       tbl$footprint <- footprints
+      printf(" distance min: %f  max: %f", min(tbl$distance), max(tbl$distance))
       all.nodes <- unique(c(target.gene, tfs, footprints))
       new.nodes <- setdiff(all.nodes, nodes(g))
       g <- addNode(new.nodes, g)
@@ -470,6 +487,10 @@ test.graphToJSON <- function()
 #------------------------------------------------------------------------------------------------------------------------
 addGeneModelLayout <- function(g)
 {
+   printf("--- addGeneModelLayout")
+   all.distances <- sort(unique(unlist(nodeData(g, attr='distance'), use.names=FALSE)))
+   print(all.distances)
+
    fp.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "footprint")]
    tf.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "TF")]
    targetGene.nodes <- nodes(g)[which(unlist(nodeData(g, attr="type"), use.names=FALSE) == "targetGene")]
