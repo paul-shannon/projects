@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>pshannon's version of Scatter plot by joequant</title>
+  <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.js"></script>
+  <script type="text/javascript" src="data.js"></script>
+
+<script type='text/javascript'>
+//------------------------------------------------------------------------------------------------------------------------
+function createXaxis(max, color)
+{
+   var lineGeo = new THREE.Geometry();
+   var lineMat = new THREE.LineBasicMaterial({color: color, linewidth: 2});
+   lineGeo.vertices.push(new THREE.Vector3(-1 * max, 0, 0), new THREE.Vector3(max, 0, 0))
+   var line = new THREE.Line(lineGeo, lineMat);
+   line.type = THREE.Lines;
+   return(line);
+
+} // createXaxis
+//------------------------------------------------------------------------------------------------------------------------
+function createYaxis(max, color)
+{
+   var lineGeo = new THREE.Geometry();
+   var lineMat = new THREE.LineBasicMaterial({color: color, linewidth: 2});
+   lineGeo.vertices.push(new THREE.Vector3(0, -1 * max, 0), new THREE.Vector3(0, max, 0))
+   var line = new THREE.Line(lineGeo, lineMat);
+   line.type = THREE.Lines;
+   return(line);
+
+} // createYaxis
+//------------------------------------------------------------------------------------------------------------------------
+function createZaxis(max, color)
+{
+   var lineGeo = new THREE.Geometry();
+   var lineMat = new THREE.LineBasicMaterial({color: color, linewidth: 2});
+   lineGeo.vertices.push(new THREE.Vector3(0, 0, -1 * max), new THREE.Vector3(0, 0, max))
+   var line = new THREE.Line(lineGeo, lineMat);
+   line.type = THREE.Lines;
+   return(line);
+
+} // createZaxis
+//------------------------------------------------------------------------------------------------------------------------
+function drawScatterPlot()
+{
+   var material = new THREE.PointsMaterial({vertexColors: true, size: 0.5});
+   var scene = new THREE.Scene();
+   var camera = new THREE.PerspectiveCamera(45, 1, 1, 10000);  // view angele, apect, near & far clipping planes
+
+   var renderer = new THREE.WebGLRenderer({antialias: true});
+   var w = window.innerWidth * 0.8;
+   var h = window.innerHeight * 0.8;
+   renderer.setSize(w, h);
+   document.body.appendChild(renderer.domElement);
+
+   //renderer.setClearColor(0xEEEEEE, 1.0);
+   renderer.setClearColor(0xFFFFEE, 1.0);
+
+   var camera = new THREE.PerspectiveCamera(45, w/h, 1, 10000);
+   camera.position.z = 100;
+   camera.position.x = 0;
+   camera.position.y = 75;
+
+   var scene = new THREE.Scene();
+
+   var scatterPlot = new THREE.Object3D();
+   scene.add(scatterPlot);
+
+   scatterPlot.rotation.y = 0.5;
+   scatterPlot.add(createXaxis(20, "blue"));
+   scatterPlot.add(createYaxis(20, "red"));
+   scatterPlot.add(createZaxis(20, "green"));
+
+   var pointCount = data.length;
+   pointCount = 100
+   var pointGeometry = new THREE.Geometry();
+   for (var i=0; i<pointCount; i++) {
+      pointGeometry.vertices.push(new THREE.Vector3(data[i].pos/17105336, data[i].af, data[i].EC1));
+      pointGeometry.colors.push(new THREE.Color("red"));
+      } // for i
+
+   var points = new THREE.Points(pointGeometry, material);
+   scatterPlot.add(points);
+   scene.add(scatterPlot);
+
+   scene.fog = new THREE.FogExp2(0xFFFFFF, 0.0035);
+
+   renderer.render(scene, camera);
+
+   var paused = false;
+   var last = new Date().getTime();
+   var mousedown = false;
+   var sx = 0, sy = 0;
+
+   window.addEventListener('mousewheel', mouseWheelEvent);     // For Chrome
+   window.addEventListener('DOMMouseScroll', mouseWheelEvent); // For Firefox
+   var zoomFactor = 1.5;
+   function mouseWheelEvent(e){
+      //console.log(" --- mouseWheelEvent");
+      var delta = e.wheelDelta ? e.wheelDelta : -e.detail;
+      if(delta > 0){
+        camera.fov *= (1/zoomFactor);
+        camera.updateProjectionMatrix();
+        //console.log("positive");
+        }
+      else{
+        camera.fov *= zoomFactor;
+        camera.updateProjectionMatrix();
+        //console.log("negative");
+        }
+     } // mouseWheelEvent
+
+
+   window.onmousedown = function (ev){
+      mousedown = true; sx = ev.clientX; sy = ev.clientY;
+      };
+   window.onmouseup = function(){mousedown = false;};
+   window.onmousemove = function(ev) {
+      if (mousedown) {
+        var dx = ev.clientX - sx;
+        var dy = ev.clientY - sy;
+        scatterPlot.rotation.y += dx*0.01;
+        camera.position.y += dy;
+        sx += dx;
+        sy += dy;
+        } // if
+      } // on.mousemove
+
+   function animate(t) {
+     renderer.clear();
+     camera.lookAt(scene.position);
+     renderer.render(scene, camera);
+     window.requestAnimationFrame(animate, renderer.domElement);
+     };
+
+   animate(new Date().getTime());
+
+} // drawScatterPlot
+//------------------------------------------------------------------------------------------------------------------------
+
+window.onload = drawScatterPlot;
+
+</script>
+</head>
+
+<body>
+    Based on <a href="http://gdd11-webgl.appspot.com">Web gl tutorial</a>
+</body>
+
+</html>
