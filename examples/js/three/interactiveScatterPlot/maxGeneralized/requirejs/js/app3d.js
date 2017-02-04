@@ -75,9 +75,9 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
            app3d.scene.add(app3d.scatterPlot);
 
            app3d.scatterPlot.rotation.y = 0.5;
-           app3d.scatterPlot.add(createAxis("x", 20, "blue"));
-           app3d.scatterPlot.add(createAxis("y", 20, "red"));
-           app3d.scatterPlot.add(createAxis("z", 20, "green"));
+           app3d.scatterPlot.add(createAxis("x", 5, "blue"));
+           app3d.scatterPlot.add(createAxis("y", 5, "red"));
+            app3d.scatterPlot.add(createAxis("z", 5, "green"));
            window.app3d = app3d;
            return(app3d);
            }, //
@@ -123,6 +123,15 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
             } // mouseWheelEvent
 
 
+         handleResize = function() {
+           console.log("resize");
+           var newWidth = $("#threeDiv").width();
+           var newHeight = $("#threeDiv").height();
+           app3d.renderer.setSize(newWidth, newHeight);
+           }; // resize handler
+
+         $(window).resize(handleResize);
+
          window.onmousedown = function (ev){
             mousedown = true; sx = ev.clientX; sy = ev.clientY;
             };
@@ -139,6 +148,7 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
             }; // on.mousemove
          window.addEventListener('mousewheel', mouseWheelEvent);     // For Chrome
          window.addEventListener('DOMMouseScroll', mouseWheelEvent); // For Firefox
+         handleResize();
          }, // draw
 
         animate: function(){
