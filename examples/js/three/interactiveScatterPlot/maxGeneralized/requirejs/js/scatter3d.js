@@ -1,14 +1,59 @@
 require.config({
-   paths: {'three':   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three'},
-   shim:  {'three':   {'exports': 'THREE'}}
+   paths: {'jquery'    :   'http://code.jquery.com/jquery-1.12.4.min',
+           'jquery-ui' :   'http://code.jquery.com/ui/1.12.1/jquery-ui.min',
+            'three':   'https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three'},
+   shim:  {'three':
+      {'exports': 'THREE'}}
    });
 
 //------------------------------------------------------------------------------------------------------------------------
-define(['three'], function (THREE) {
+define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
 
    var self = function(){
 
       var name = 'scatter3d';
+      var renderer = null;
+      var targetDivName = null;
+      var targetDiv = null;
+      var scene = null;
+      var camera = null;
+      var material = null;
+      var scatterPlot = null;
+      var scatterPlotWidget = null
+
+      //----------------------------------------------------------------------------------------------------
+      this.init = function(targetDivName, data){
+
+         console.log("initializing scatter3d");
+         this.targetDivName = targetDivName;
+         this.data = data;
+         this.material = new THREE.PointsMaterial({vertexColors: true, size: 0.5});
+         this.scene = new THREE.Scene();
+         this.camera = new THREE.PerspectiveCamera(45, 1, 1, 10000);  // view angle, apect, near & far clipping planes
+
+         this.renderer = new THREE.WebGLRenderer({antialias: true});
+         var w = window.innerWidth * 0.8;
+         var h = window.innerHeight * 0.8;
+         this.renderer.setSize(w, h);
+         this.targetDiv = document.getElementById(this.targetDivName);
+         this.targetDiv.appendChild(this.renderer.domElement);
+         this.renderer.setClearColor(0xFFFFEE, 1.0);
+
+         this.camera = new THREE.PerspectiveCamera(45, w/h, 1, 10000);
+         this.camera.position.z = 100;
+         this.camera.position.x = 0;
+         this.camera.position.y = 75;
+
+         this.scatterPlot = new THREE.Object3D();
+         this.scene.add(this.scatterPlot);
+
+         this.scatterPlot.rotation.y = 0.5;
+         this.scatterPlot.add(this.createAxis("x", 20, "blue"));
+         this.scatterPlot.add(this.createAxis("y", 20, "red"));
+         this.scatterPlot.add(this.createAxis("z", 20, "green"));
+         window.scatterPlotWidget = this;
+         return(this);
+         }
 
       //----------------------------------------------------------------------------------------------------
       this.createAxis = function(whichAxis, max, color){
@@ -40,8 +85,6 @@ define(['three'], function (THREE) {
          lineGeo.vertices.push(start, end);
          var line = new THREE.Line(lineGeo, lineMat);
          line.type = THREE.Lines;
-         console.log("---- returning axis");
-         console.log(line);
          return(line);
          } // createaxis
 
@@ -53,16 +96,17 @@ define(['three'], function (THREE) {
       //----------------------------------------------------------------------------------------------------
       this.drawScatterPlot = function(){
 
-         var material = new THREE.PointsMaterial({vertexColors: true, size: 0.5});
-         var scene = new THREE.Scene();
-         var camera = new THREE.PerspectiveCamera(45, 1, 1, 10000);  // view angle, apect, near & far clipping planes
+         /**************
+        var material = new THREE.PointsMaterial({vertexColors: true, size: 0.5});
+         scene = new THREE.Scene();
+         camera = new THREE.PerspectiveCamera(45, 1, 1, 10000);  // view angle, apect, near & far clipping planes
 
          var renderer = new THREE.WebGLRenderer({antialias: true});
          var w = window.innerWidth * 0.8;
          var h = window.innerHeight * 0.8;
          renderer.setSize(w, h);
 
-         var threeDiv = document.getElementById("threeDiv");
+         var threeDiv = document.getElementById(this.targetDiv);
          //var canvasWidth = 500;
          //var canvasHeight = 500;
          threeDiv.appendChild(renderer.domElement);
@@ -85,29 +129,27 @@ define(['three'], function (THREE) {
          scene.add(scatterPlot);
 
          scatterPlot.rotation.y = 0.5;
-         debugger;
-         var xAxis = this.createAxis("x", 20, "blue");
-         console.log("---- axis from function")
-         console.log(xAxis);
          scatterPlot.add(this.createAxis("x", 20, "blue"));
          scatterPlot.add(this.createAxis("y", 20, "red"));
          scatterPlot.add(this.createAxis("z", 20, "green"));
+          ***********/
 
-         var pointCount = data.length;
-         pointCount = 100
+         var pointCount = this.data.length;
+         //pointCount = 100
          var pointGeometry = new THREE.Geometry();
          for (var i=0; i<pointCount; i++) {
-            pointGeometry.vertices.push(new THREE.Vector3(data[i].pos/17105336, data[i].af, data[i].EC1));
+            var point = data[i];
+            pointGeometry.vertices.push(new THREE.Vector3(point.pos/17105336, point.af, point.EC1));
             pointGeometry.colors.push(new THREE.Color("red"));
             } // for i
 
-         var points = new THREE.Points(pointGeometry, material);
-         scatterPlot.add(points);
-         scene.add(scatterPlot);
+         var points = new THREE.Points(pointGeometry, this.material);
+         this.scatterPlot.add(points);
+         //this.scene.add(this.scatterPlot);
 
-         scene.fog = new THREE.FogExp2(0xFFFFFF, 0.0035);
+         this.scene.fog = new THREE.FogExp2(0xFFFFFF, 0.0035);
 
-         renderer.render(scene, camera);
+         this.renderer.render(this.scene, this.camera);
 
          var paused = false;
          var last = new Date().getTime();
@@ -117,17 +159,18 @@ define(['three'], function (THREE) {
          window.addEventListener('mousewheel', mouseWheelEvent);     // For Chrome
          window.addEventListener('DOMMouseScroll', mouseWheelEvent); // For Firefox
          var zoomFactor = 1.5;
+         var scatter3dObject = this;
          function mouseWheelEvent(e){
             //console.log(" --- mouseWheelEvent");
             var delta = e.wheelDelta ? e.wheelDelta : -e.detail;
             if(delta > 0){
-              camera.fov *= (1/zoomFactor);
-              camera.updateProjectionMatrix();
+              scatter3dObject.camera.fov *= (1/zoomFactor);
+              scatter3dObject.camera.updateProjectionMatrix();
               //console.log("positive");
               }
             else{
-              camera.fov *= zoomFactor;
-              camera.updateProjectionMatrix();
+              scatter3dObject.camera.fov *= zoomFactor;
+              scatter3dObject.camera.updateProjectionMatrix();
               //console.log("negative");
               }
            } // mouseWheelEvent
@@ -137,24 +180,37 @@ define(['three'], function (THREE) {
             mousedown = true; sx = ev.clientX; sy = ev.clientY;
             };
          window.onmouseup = function(){mousedown = false;};
+         that = this;
          window.onmousemove = function(ev) {
             if (mousedown) {
               var dx = ev.clientX - sx;
               var dy = ev.clientY - sy;
-              scatterPlot.rotation.y += dx*0.01;
-              camera.position.y += dy;
+              that.scatterPlot.rotation.y += dx*0.01;
+              that.camera.position.y += dy;
               sx += dx;
               sy += dy;
               } // if
             } // on.mousemove
 
-         function animate(t) {
-           renderer.clear();
-           camera.lookAt(scene.position);
-           renderer.render(scene, camera);
-           window.requestAnimationFrame(animate, renderer.domElement);
+         this.animate = function() {
+           console.log("----- entering animate")
+           console.log(this);
+           window.scatterPlotWidget.renderer.clear();
+           console.log("--- 2");
+           window.scatterPlotWidget.camera.lookAt(window.scatterPlotWidget.scene.position);
+           console.log("--- 3");
+           console.log("---- window.scatterPlotWidget.scene: ")
+           console.log(window.scatterPlotWidget.scene)
+           console.log("---- window.scatterPlotWidget.camera ")
+           console.log(window.scatterPlotWidget.camera)
+           window.scatterPlotWidget.renderer.render(window.scatterPlotWidget.scene, window.scatterPlotWidget.camera);
+           console.log("--- 4");
+           //window.requestAnimationFrame(boundAnimate, window.scatterPlotWidget.renderer.domElement);
+           console.log("--- 5");
            };
-         animate(new Date().getTime());
+         //boundAnimate = _.bind(this.animate, this)'
+         //boundAnimate()
+         //window.scatterPlotWidget.animate();
          } // drawScatterPlot
 
 
