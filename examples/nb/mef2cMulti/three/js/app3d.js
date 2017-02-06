@@ -16,9 +16,10 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
         targetDiv: null,
         scene: null,
         camera: null,
-        material: null,
+        pointsMaterial: null,
         scatterPlot: null,
         scatterPlotWidget: null,
+        points: [],
 
         init:  function(targetDivName){
 
@@ -28,7 +29,7 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
                  console.log("illegal axis specified, should be x, y or z")
                  return(None);
                  }
-               var lineGeo = new THREE.Geometry();
+               var lineGeo = new THREE.Geometry({pointSize:3});
                var lineMat = new THREE.LineBasicMaterial({color: color, linewidth: 2});
                var start, end;
                switch(whichAxis){
@@ -53,7 +54,7 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
 
            console.log("initializing scatter3d");
            app3d.targetDivName = targetDivName;
-           app3d.material = new THREE.PointsMaterial({vertexColors: true, size: 0.5});
+           app3d.pointsMaterial = new THREE.PointsMaterial({vertexColors: true, size: 10});
            app3d.scene = new THREE.Scene();
            app3d.camera = new THREE.PerspectiveCamera(45, 1, 1, 10000);  // view angle, apect, near & far clipping planes
            app3d.renderer = new THREE.WebGLRenderer({antialias: true});
@@ -64,10 +65,10 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
            console.log("app3d");
            console.log(app3d)
            app3d.targetDiv.appendChild(app3d.renderer.domElement);
-           app3d.renderer.setClearColor(0xFFFFEE, 1.0);
+           app3d.renderer.setClearColor(0x000000, 1.0);
 
            app3d.camera = new THREE.PerspectiveCamera(45, w/h, 1, 10000);
-           app3d.camera.position.z = 100;
+           app3d.camera.position.z = 1000;
            app3d.camera.position.x = 0;
            app3d.camera.position.y = 75;
 
@@ -94,12 +95,16 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
          var pointGeometry = new THREE.Geometry();
          for (var i=0; i<pointCount; i++) {
             var point = data[i];
-            pointGeometry.vertices.push(new THREE.Vector3(point.pos/17105336, point.af, point.EC1));
-            pointGeometry.colors.push(new THREE.Color("red"));
+            //pointGeometry.vertices.push(new THREE.Vector3(point.pos/17105336, point.af, point.EC1));
+            pointGeometry.vertices.push(new THREE.Vector3(point.x, point.y, point.z));
+            color = new THREE.Color();
+            color.setHSL(Math.random(), 1.0, 0.5);
+            pointGeometry.colors.push(color);
+            //pointGeometry.colors.push(new THREE.Color("white"));
             } // for i
 
-         var points = new THREE.Points(pointGeometry, app3d.material);
-         app3d.scatterPlot.add(points);
+         app3d.points = new THREE.Points(pointGeometry, app3d.pointsMaterial);
+         app3d.scatterPlot.add(app3d.points);
          app3d.renderer.render(app3d.scene, app3d.camera);
 
          var paused = false;
@@ -107,6 +112,71 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
          var mousedown = false;
          var sx = 0, sy = 0;
          var zoomFactor = 1.5;
+
+        function drawBoundingBox(){
+           function v(x,y,z){ return new THREE.Vector3(x,y,z); }
+           var lineGeo = new THREE.Geometry();
+           maxValue = 180;
+           lineGeo.vertices.push(
+
+               v(-maxValue,  maxValue, -maxValue), v( maxValue,  maxValue, -maxValue),
+               v( maxValue, -maxValue, -maxValue), v( -maxValue, -maxValue, -maxValue),
+               v(-maxValue,  maxValue, -maxValue), v(-maxValue,  maxValue, maxValue),
+
+               v( maxValue,  maxValue, maxValue),
+               v( maxValue, -maxValue, maxValue),
+               v( -maxValue, -maxValue, maxValue),
+               v(-maxValue,  maxValue, maxValue),
+
+               v( -maxValue, -maxValue, maxValue), v( -maxValue, -maxValue, -maxValue),
+               v( maxValue, -maxValue, -maxValue), v( maxValue, -maxValue, maxValue),
+               v( maxValue, maxValue, maxValue),   v( maxValue, maxValue, -maxValue),
+
+               //v(-maxValue, -maxValue, maxValue),
+               //v(-maxValue, -maxValue, -maxValue),
+               //v(-maxValue, maxValue, -maxValue),
+               //v(-maxValue, maxValue, maxValue),
+
+             //v(-maxValue, -maxValue, -maxValue), v(maxValue, -maxValue, -maxValue),
+             //v(-maxValue, maxValue, maxValue), v(maxValue, maxValue, maxValue),
+             //v(-maxValue, -maxValue, maxValue), v(maxValue, -maxValue, maxValue),
+
+             //v(maxValue, -maxValue, -maxValue), v(maxValue, maxValue, -maxValue),
+             //v(-maxValue, -maxValue, -maxValue), v(-maxValue, maxValue, -maxValue),
+             //v(maxValue, -maxValue, maxValue), v(maxValue, maxValue, maxValue),
+             //v(-maxValue, -maxValue, maxValue), v(-maxValue, maxValue, maxValue),
+
+             //v(maxValue, maxValue, -maxValue), v(maxValue, maxValue, maxValue),
+             //v(maxValue, -maxValue, -maxValue), v(maxValue, -maxValue, maxValue),
+             //v(-maxValue, maxValue, -maxValue), v(-maxValue, maxValue, maxValue),
+             //v(-maxValue, -maxValue, -maxValue), v(-maxValue, -maxValue, maxValue)
+           );
+
+
+            /**************
+            v(-maxValue, maxValue, -maxValue), v(maxValue, maxValue, -maxValue),
+              v(-maxValue, -maxValue, -maxValue), v(maxValue, -maxValue, -maxValue),
+             v(-maxValue, maxValue, maxValue), v(maxValue, maxValue, maxValue),
+             v(-maxValue, -maxValue, maxValue), v(maxValue, -maxValue, maxValue),
+
+             v(maxValue, -maxValue, -maxValue), v(maxValue, maxValue, -maxValue),
+             v(-maxValue, -maxValue, -maxValue), v(-maxValue, maxValue, -maxValue),
+             v(maxValue, -maxValue, maxValue), v(maxValue, maxValue, maxValue),
+             v(-maxValue, -maxValue, maxValue), v(-maxValue, maxValue, maxValue),
+
+             v(maxValue, maxValue, -maxValue), v(maxValue, maxValue, maxValue),
+             v(maxValue, -maxValue, -maxValue), v(maxValue, -maxValue, maxValue),
+             v(-maxValue, maxValue, -maxValue), v(-maxValue, maxValue, maxValue),
+             v(-maxValue, -maxValue, -maxValue), v(-maxValue, -maxValue, maxValue)
+           );
+             ************/
+           var lineMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, linewidth: 1});
+           var line = new THREE.Line(lineGeo, lineMat);
+           line.type = THREE.Lines;
+           return(line)
+           } // drawBoundingBox
+
+         app3d.scatterPlot.add(drawBoundingBox());
 
          function mouseWheelEvent(event){
             if(document.getElementById("threeDiv").contains(event.target)){
@@ -136,10 +206,52 @@ define(['jquery', 'jquery-ui', 'three'], function ($, ui, THREE) {
 
          $(window).resize(handleResize);
 
+         var raycaster = new THREE.Raycaster();
+         var mouse = new THREE.Vector2();
+
+          //projector.unprojectVector( mouseVector, camera );
+          //var raycaster = new THREE.Raycaster( camera.position, mouseVector.subSelf( camera.position ).normalize() );
+
+
+
          window.onmousedown = function (ev){
             console.log(" --- mousedown");
             mousedown = true; sx = ev.clientX; sy = ev.clientY;
-            };
+            var raycaster = new THREE.Raycaster();
+            var mouse = new THREE.Vector2();
+            mouse.x = ( ev.clientX / window.innerWidth ) * 2 - 1;
+            mouse.y = - ( ev.clientY / window.innerHeight ) * 2 + 1;
+            console.log("mouse: " + mouse.x + ", " + mouse.y);
+            console.log("children: ");
+             console.log(app3d.scene.children);
+            raycaster.setFromCamera(mouse, app3d.camera );
+            var intersects = raycaster.intersectObjects(app3d.scene.children);
+            //console.log(app3d.points)
+            // console.log(app3d.points[0]);
+            //var intersects = raycaster.intersectObjects(app3d.points);
+            console.log(intersects.length);
+            } // onmousedown
+            //var vector = new THREE.Vector3((ev.clientX / window.innerWidth) * 2 - 1,
+            //                                -(ev.clientY / window.innerHeight) * 2 + 1, 0.5);
+            //projector.unprojectVector(vector, app3d.camera);
+            //var raycaster = new THREE.Raycaster(app3d.camera.position, vector.sub(app3d.camera.position).normalize());
+            //var intersects = raycaster.intersectObjects(app3d.points);
+            //};
+
+            //var projector = new THREE.Projector();
+            //projector.unprojectVector(mouseVector, app3d.camera);
+            //var raycaster = new THREE.Raycaster(app3d.camera.position, mouseVector.sub(app3d.camera.position).normalize());
+            //var intersects = raycaster.intersectObjects(app3d.scene.children);
+            // console.log(app3d.scene.children.length);
+            //raycaster.setFromCamera(mouse, app3d.camera);
+            //var intersects = raycaster.intersectObjects(app3d.scene.children);
+            //console.log("intersecting objects: " + intersects.length);
+            //for(var i = 0; i < intersects.length; i++){
+            //  intersects[i].object.material.color.set(0xff0000);
+            //  }
+            //}; // onmousedown
+
+
          window.onmouseup = function(){mousedown = false;};
          window.onmousemove = function(event){
             if(document.getElementById("threeDiv").contains(event.target)){
