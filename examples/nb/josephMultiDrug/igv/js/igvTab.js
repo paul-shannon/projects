@@ -50,8 +50,10 @@ define(['jquery', 'jquery-ui', 'igv'], function ($, ui, igv) {
               }, // config
            targetDivId = '#' + targetDivName;
            igvTab.targetDiv = $(targetDivId);
-           igvTab.browser = igv.createBrowser(igvTab.targetDiv, igvTab.config)
-       } // init
+       }, // init
+       display: function(){
+         igvTab.igvBrowser = igv.createBrowser(igvTab.targetDiv, igvTab.config)
+         }
      }; // igvTab
    return igvTab;
 });
