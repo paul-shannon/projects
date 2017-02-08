@@ -15,7 +15,7 @@ define(['jquery', 'jquery-ui', 'cytoscape'], function ($, ui, cytoscape) {
       options: null,
 
       init:  function(targetDivName){
-          self.options = {container: $("#cyDiv"),
+          self.options = {container: $("#cyCanvasDiv"),
                                  elements: {nodes: [{data: {id:'a'}}],
                                             edges: [{data:{source:'a', target:'a'}}]},
                                  style: cytoscape.stylesheet()
@@ -39,7 +39,7 @@ define(['jquery', 'jquery-ui', 'cytoscape'], function ($, ui, cytoscape) {
           }, // init
 
       display: function(){
-         $("#cyDiv").height(800);
+         $("#cyCanvasDiv").height(800);
          self.cy = cytoscape(self.options);
          self.fit(100);
          }, // display
