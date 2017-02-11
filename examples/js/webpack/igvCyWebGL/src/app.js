@@ -1,7 +1,7 @@
 cytoscape = require('cytoscape');
 jquery = require('jquery');
 jqueryui = require('jquery-ui')
-
+require("./style.css");
 
 //----------------------------------------------------------------------------------------------------
 getCyOptions = function()
