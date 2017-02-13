@@ -238,6 +238,7 @@ test.tableToReducedGraph <- function()
 tableToFullGraph <- function(tbl.list)
 {
    printf("--- tableToFullGraph")
+   printf("rows in tbl.list[[1]]: %d", nrow(tbl.list[[1]]))
    g <- graphNEL(edgemode = "directed")
    nodeDataDefaults(g, attr = "type") <- "undefined"
    nodeDataDefaults(g, attr = "label") <- "default node label"
