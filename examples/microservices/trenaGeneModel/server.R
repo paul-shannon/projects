@@ -7,7 +7,6 @@ library(TReNA)
 library(stringr)
 library(graph)
 library(RUnit)
-#library(igraph)
 #------------------------------------------------------------------------------------------------------------------------
 load("./datasets/coryAD/rosmap_counts_matrix_normalized_geneSymbols_25031x638.RData")
 mtx.expression <- asinh(mtx)
@@ -20,6 +19,7 @@ runTests <- function()
 {
   test.extractChromStartEndFromChromLocString()
   test.createGeneModel();
+  test.createGeneModelForRegionWithoutFootprints()
   test.tableToReducedGraph()
   test.tableToFullGraph()
   #test.graphnelToCyjsJSON()
@@ -66,6 +66,12 @@ createGeneModel <- function(target.gene, region)
 {
    printf("--- createGeneModel for %s, %s", target.gene, region)
 
+   if(!target.gene %in% rownames(mtx.expression)){
+      msg <- sprintf("no expression data for %s", target.gene);  # todo: pass this back as payload
+      print(msg)
+      return(list(tbl=data.frame(), msg=msg))
+      }
+
    absolute.lasso.beta.min <- 0.2
    absolute.expression.correlation.min <- 0.2
    randomForest.purity.min <- 1.0
@@ -79,8 +85,9 @@ createGeneModel <- function(target.gene, region)
 
    tbl.fp <- getFootprintsInRegion(fpf, chrom, start, end)
    if(nrow(tbl.fp) == 0){
-       printf("no footprints found within in region %s:%d-%d", chrom, start, end)
-       return(NA)
+       msg <- printf("no footprints found within in region %s:%d-%d", chrom, start, end)
+       print(msg)
+       return(list(tbl=data.frame(), msg=msg))
        }
 
    printf("range in which fps are requested: %d", end - start)
@@ -137,7 +144,9 @@ createGeneModel <- function(target.gene, region)
 
    printf("after distances calculated, distances to %s tss:  %d - %d", target.gene, min(tbl.04$distance), max(tbl.04$distance))
    print(gene.info)
-   tbl.04
+   msg <- sprintf("%d putative TFs found", nrow(tbl.04))
+   print(msg)
+   return(list(tbl=tbl.04, msg=msg))
 
 } # createGeneModel
 #------------------------------------------------------------------------------------------------------------------------
@@ -146,7 +155,8 @@ test.createGeneModel <- function()
    printf("--- test.createGeneModel")
    region <- "7:101,165,571-101,165,620"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
    target.gene <- "VGF"
-   tbl.gm <- createGeneModel(target.gene, region)
+   result <- createGeneModel(target.gene, region)
+   tbl.gm <- result$tbl
    checkEquals(dim(tbl.gm), c(2,6))
    checkEquals(colnames(tbl.gm), c("gene", "gene.cor", "beta", "IncNodePurity", "start", "distance"))
    checkEquals(sort(tbl.gm$gene), c("MAZ", "NRF1"))
@@ -154,9 +164,21 @@ test.createGeneModel <- function()
      # try a gene on the minus strand
    target.gene <- "MEF2C"
    region <- "5:88,904,000-88,909,000"
-   tbl.gm <- createGeneModel(target.gene, region)
+   result <- createGeneModel(target.gene, region)
+   tbl.gm <- result$tbl.gm
 
 } # test.createGeneModel
+#------------------------------------------------------------------------------------------------------------------------
+test.createGeneModelForRegionWithoutFootprints <- function()
+{
+   printf("--- test.createGeneModeForRegionWithoutFootprintsl")
+   region <- "5:88,810,667-88,810,705"
+   target.gene <- "MEF2C"
+   result  <- createGeneModel(target.gene, region)
+   tbl.gm <- result$tbl
+   checkEquals(nrow(tbl.gm), 0)
+
+} # test.createGeneModelForRegionWithoutFootprints
 #------------------------------------------------------------------------------------------------------------------------
 tableToReducedGraph <- function(tbl.list)
 {
@@ -535,7 +557,8 @@ test.addGeneModelLayout <- function()
    printf("--- test.addGeneModelLayout")
    region <- "7:101,165,571-101,165,620"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
    target.gene <- "VGF"
-   tbl.gm <- createGeneModel(target.gene, region)
+   result <- createGeneModel(target.gene, region)
+   tbl.gm <- result$tbl
    tbl.list <- list(tbl.gm)
    names(tbl.list) <- target.gene
 
@@ -567,7 +590,8 @@ test.addGeneModelLayout <- function()
    region <- "7:101,165,600-101,165,700"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
    region <- "7:101,165,560-101,165,630"
    target.gene <- "VGF"
-   tbl.gm <- createGeneModel(target.gene, region)
+   result <- createGeneModel(target.gene, region)
+   tbl.gm <- result$tbl
    tbl.list <- list(tbl.gm)
    names(tbl.list) <- target.gene
 
@@ -582,7 +606,8 @@ test.addGeneModelLayout <- function()
 
    region <- "7:101,165,000-101,167,000"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
    target.gene <- "VGF"
-   tbl.gm <- createGeneModel(target.gene, region)
+   result <- createGeneModel(target.gene, region)
+   tbl.gm <- result$tbl
      # make sure the footprint distance span is wide enough to avoid scaling up
    span.fp <- range(tbl.gm$distance)
    checkTrue(max(span.fp) - min(span.fp) > 1000)
@@ -688,7 +713,8 @@ test.graphnelToCyjsJSON <- function()
 
    region <- "7:101,165,571-101,165,620"   # about 25bp up and downstream from the VGF (minus strand) tss, 2 hint brain footprints
    target.gene <- "VGF"
-   tbl.gm <- createGeneModel(target.gene, region)
+   result <- createGeneModel(target.gene, region)
+   tbl.gm <- result$tbl
    tbl.list <- list(tbl.gm)
    names(tbl.list) <- target.gene
    g1 <- tableToReducedGraph(tbl.list)
@@ -744,66 +770,76 @@ if(!interactive()) {
    context = init.context()
    socket = init.socket(context,"ZMQ_REP")
    bind.socket(socket,"tcp://*:5557")
-   while(TRUE) {
-      printf("top of receive/send loop")
-      raw.message <- receive.string(socket)
-      msg = fromJSON(raw.message)
-      printf("cmd: %s", msg$cmd)
-      print(msg)
-      if(msg$cmd == "ping") {
-          response <- list(cmd=msg$callack, status="result", callback="", payload="pong")
+
+   errorFunction <- function(condition){
+     printf("==== exception caught ===")
+     print(as.character(condition))       
+     response <- list(cmd=msg$callack, status="error", callback="", payload=as.character(condition));
+     send.raw.string(socket, toJSON(response))
+     };
+   tryCatch({
+     while(TRUE) {
+        printf("top of receive/send loop")
+        raw.message <- receive.string(socket)
+        msg = fromJSON(raw.message)
+        printf("cmd: %s", msg$cmd)
+        print(msg)
+        if(msg$cmd == "ping") {
+            response <- list(cmd=msg$callack, status="result", callback="", payload="pong")
+            }
+        else if(msg$cmd == "upcase") {
+            response <- list(cmd=msg$callack, status="result", callback="", payload=toupper(msg$payload))
+            }
+        else if(msg$cmd == "getTestNetwork"){
+           infile <- file("vgfModel.json")
+           graphModel <- fromJSON(readLines(infile))
+           response <- list(cmd=msg$callback, status="result", callback="", payload=graphModel)
+           }
+        else if(msg$cmd == "getFootprintsInRegion"){
+          footprintRegion <- msg$payload$footprintRegion;
+          region.parsed <- extractChromStartEndFromChromLocString(footprintegion)
+          chrom <- region.parsed$chrom
+          start <- region.parsed$start
+          end <-   region.parsed$end
+          printf("region parsed: %s:%d-%d", chrom, start, end);
+          tbl.fp <- getFootprintsInRegion(fpf, chrom, start, end)
+          commandStatus <- "success"
+          if(nrow(tbl.f) == 0)
+             commandStatus = "failure"
+          response <- list(cmd=msg$callback, status=commandStatus, callback="", payload=tbl.fp)
           }
-      else if(msg$cmd == "upcase") {
-          response <- list(cmd=msg$callack, status="result", callback="", payload=toupper(msg$payload))
-          }
-      else if(msg$cmd == "getTestNetwork"){
-         infile <- file("vgfModel.json")
-         graphModel <- fromJSON(readLines(infile))
-         response <- list(cmd=msg$callback, status="result", callback="", payload=graphModel)
-         }
-      else if(msg$cmd == "createGeneModel"){
-         print(1)
-         targetGene <- msg$payload$targetGene;
-         print(2)
-         footprintRegion <- msg$payload$footprintRegion;
-         print(3)
-         tbl.gm <- createGeneModel(targetGene, footprintRegion)
-         print(4)
-         tbl.list <- list(tbl.gm)
-         print(5)
-         names(tbl.list) <- targetGene
-         print(6)
-         graph <- tableToFullGraph(tbl.list)
-         print(7)
-         graph.pos <- addGeneModelLayout(graph)
-         #json <- graphnelToCyjsJSON(graph)
-         json.string <- graphToJSON(graph.pos)
-         print(8)
-         response <- list(cmd=msg$callback, status="success", callback="", payload=json.string)
-         }
-      else {
-         response <- list(cmd="handleUnrecognizedCommand", status="error", callback="", payload=toupper(raw.message))
-         }
-      send.raw.string(socket, toJSON(response))
-      Sys.sleep(1)
-      } # while (TRUE)
+        else if(msg$cmd == "createGeneModel"){
+           print(1)
+           targetGene <- msg$payload$targetGene;
+           print(2)
+           footprintRegion <- msg$payload$footprintRegion;
+           print(3)
+           result <- createGeneModel(targetGene, footprintRegion)
+           tbl.gm <- result$tbl
+           message <- result$msg
+           if(nrow(tbl.gm) == 0){
+              response <- list(cmd=msg$callback, status="error", callback="",
+                               payload=message)
+              }
+           else{
+              tbl.list <- list(tbl.gm)
+              print(5)
+              names(tbl.list) <- targetGene
+              graph <- tableToFullGraph(tbl.list)
+              print(7)
+              graph.pos <- addGeneModelLayout(graph)
+              json.string <- graphToJSON(graph.pos)
+              print(8)
+              response <- list(cmd=msg$callback, status="success", callback="", payload=json.string)
+              }
+           } # createGeneModel
+        else {
+           response <- list(cmd="handleUnrecognizedCommand", status="error", callback="", payload=toupper(raw.message))
+           }
+        send.raw.string(socket, toJSON(response))
+        Sys.sleep(1)
+        } # while (TRUE)
+      }, error=errorFunction); # tryCatch
 
 } # if !interactive()
 #------------------------------------------------------------------------------------------------------------------------
-#   tbl <- createModel(target.gene, promoter.shoulder=100,
-#                      mtx.expression=mtx.rosmap,
-#                      #mtx.expression=mtx.mayoTCX,
-#                      #mtx.expression=mtx.rosmap,
-#                      absolute.lasso.beta.min=0.2,
-#                      randomForest.purity.min=3,
-#                     absolute.expression.correlation.min=0.2)
-#print(dim(tbl))
-#rcy <- renderAsNetwork(tbl, target.gene)
-#layoutByFootprintPosition(rcy)
-#httpSetStyle(rcy, "style-purityControlsNodeSize.js")
-#
-#gjson <- getJSON(rcy)
-#out <- file("vgfModel.json", "w")
-#writeChar(gjson, con=out, eos=NULL)
-#close(out)
-#
