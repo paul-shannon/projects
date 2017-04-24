@@ -6,7 +6,10 @@ $("#cyDiv").height(300);
 var network = require("./cellphoneModel.json")
 var vizmap  = require("./networkStyle.json")
 //var cy = cytoscape({container: $("#cyDiv"), elements:{nodes:[{data:{id:'a'}}], edges:[{data:{source:'a', target:'a'}}]}})
-var cy = cytoscape({container: $("#cyDiv"), elements: network.elements, style: vizmap});
+var cy = cytoscape({container: $("#cyDiv"),
+                    elements: network.elements,
+                    layout: {name: "preset", fit: true},
+                    style: vizmap});
 window.cy = cy;
 
 
