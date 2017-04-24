@@ -2,8 +2,126 @@
     <head>
         <meta charset="utf-8">
     </head>
-    <body>
-        <div id="cyDiv"> cyjs coming soon</div>
+  <body role="document">
+
+  <div id="outermostDiv"  class="container-fluid">
+    <div id="menubarDiv">
+
+      <!----------------------------------- the Knockout Menu   ----------------------------------------->
+
+      <span class="dropdown" style="margin: 3px;">
+        <button id="knockoutMainMenuButton" class="btn btn-default dropdown-toggle newMenubarButton" type="button"
+                data-toggle="dropdown">Knockout <span class="caret"></span></button>
+
+        <ul id="knockoutMenuItems" class="dropdown-menu">
+
+          <li><a id="knockoutSelectedPhonesMenuItem" tabindex="-1" href="#" id="knockoutSelected">Selected</a></li>
+
+          <li class="dropdown-submenu phonesByCarrier-submenu">
+            <a id="knockoutByCarrierMenuHead" class="test" tabindex="-1" href="#">By Carrier <span class="rotate270 caret"></span></a>
+            <ul id="knockoutByCarrierMenuItems" class="dropdown-menu dropdown-submenu-items carriers-menu">
+              <li><a id="knockoutTMobilePhonesMenuItem" tabindex="-1" href="#" id="knockoutSelected">T-Mobile</a></li>
+              <li><a id="knockoutSprintPhonesMenuItem" tabindex="-1" href="#" id="knockoutByCarrier">Sprint</a></li>
+              <li><a id="knockoutATTPhonesMenuItem" tabindex="-1" href="#" id="knockoutByProperty">AT&T</a></li>
+            </ul>
+          </li>
+
+
+          <li class="dropdown-submenu phonesByProperty-submenu">
+            <a id="knockoutByPropertiesMenuHead" class="test" tabindex="-1" href="#">By Property <span class="rotate270 caret"></span></a>
+            <ul id="knockoutByPropertiesMenuItems" class="dropdown-menu dropdown-submenu-items properties-menu">
+              <li class="dropdown-submenu  phonesWithoutProperties-subsubmenu">
+                <a id="knockoutWithPropertyMenuHead" class="test" tabindex="-1" href="#">Phones with <span class="rotate270 caret"></span></a>
+                <ul id="knockoutWithPropertyMenuItems" class="dropdown-menu">
+                  <li><a id="knockoutWithEmailMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="knockoutWithProperty_email">Email </a></li>
+                  <li><a id="knockoutWithRoamingMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="knockoutWithProperty_roaming">Roaming</a></li>
+                  <li><a id="knockoutWithPhotolMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="knockoutWithProperty_photo">Photo</a></li>
+                </ul>
+              </li>
+
+              <li class="dropdown-submenu phonesWithoutProperties-subsubmenu">
+                <a  id="knockoutWithoutPropertyMenuHead" class="test" tabindex="-1" href="#">Phones without <span class="rotate270 caret"></span></a>
+                <ul id="knockoutWithoutPropertyMenuItems" class="dropdown-menu">
+                  <li><a id="knockoutWithoutEmailMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="knockoutWithProperty_email">Email </a></li>
+                  <li><a id="knockoutWithoutRoamingMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="knockoutWithProperty_roaming">Roaming</a></li>
+                  <li><a id="knockoutWithoutPhotolMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="knockoutWithProperty_photo">Photo</a></li>
+                </ul>
+              </li>
+
+            </ul>
+          </li>
+
+        </ul>
+      </span>
+
+      <!---------------------------------- the Reactive Menu   --------------------------------------------->
+
+      <span class="dropdown" style="margin: 3px;">
+        <button id="reactivateMainMenuButton" class="btn btn-default dropdown-toggle newMenubarButton" type="button"
+                data-toggle="dropdown">Reactivate <span class="caret"></span></button>
+
+        <ul id="reactivateMenuItems" class="dropdown-menu">
+
+          <li><a id="reactivateSelectedPhonesMenuItem" tabindex="-1" href="#" id="reactivateSelected">Selected</a></li>
+
+          <li class="dropdown-submenu phonesByCarrier-submenu">
+            <a id="reactivateByCarrierMenuHead" class="test" tabindex="-1" href="#">By Carrier <span class="rotate270 caret"></span></a>
+            <ul id="reactivateByCarrierMenuItems" class="dropdown-menu dropdown-submenu-items carriers-menu">
+              <li><a id="reactivateTMobilePhonesMenuItem" tabindex="-1" href="#" id="reactivateSelected">T-Mobile</a></li>
+              <li><a id="reactivateSprintPhonesMenuItem" tabindex="-1" href="#" id="reactivateByCarrier">Sprint</a></li>
+              <li><a id="reactivateATTPhonesMenuItem" tabindex="-1" href="#" id="reactivateByProperty">AT&T</a></li>
+            </ul>
+          </li>
+
+
+          <li class="dropdown-submenu phonesByProperty-submenu">
+            <a id="reactivateByPropertiesMenuHead" class="test" tabindex="-1" href="#">By Property <span class="rotate270 caret"></span></a>
+            <ul id="reactivateByPropertiesMenuItems" class="dropdown-menu dropdown-submenu-items properties-menu">
+              <li class="dropdown-submenu  phonesWithoutProperties-subsubmenu">
+                <a id="reactivateWithPropertyMenuHead" class="test" tabindex="-1" href="#">Phones with <span class="rotate270 caret"></span></a>
+                <ul id="reactivateWithPropertyMenuItems" class="dropdown-menu">
+                  <li><a id="reactivateWithEmailMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="reactivateWithProperty_email">Email </a></li>
+                  <li><a id="reactivateWithRoamingMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="reactivateWithProperty_roaming">Roaming</a></li>
+                  <li><a id="reactivateWithPhotolMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="reactivateWithProperty_photo">Photo</a></li>
+                </ul>
+              </li>
+
+              <li class="dropdown-submenu phonesWithoutProperties-subsubmenu">
+                <a  id="reactivateWithoutPropertyMenuHead" class="test" tabindex="-1" href="#">Phones without <span class="rotate270 caret"></span></a>
+                <ul id="reactivateWithoutPropertyMenuItems" class="dropdown-menu">
+                  <li><a id="reactivateWithoutEmailMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="reactivateWithProperty_email">Email </a></li>
+                  <li><a id="reactivateWithoutRoamingMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="reactivateWithProperty_roaming">Roaming</a></li>
+                  <li><a id="reactivateWithoutPhotolMenuItem" class="leafMenuItem" tabindex="-1" href="#" id="reactivateWithProperty_photo">Photo</a></li>
+                </ul>
+              </li>
+
+            </ul>
+          </li>
+
+        </ul>
+      </span>
+
+      <!-------------------------------------------------------------------------------------------------->
+
+
+
+      <button class="menubarButton" id="phoneTreeButton">Phone Tree...</button>
+      <button class="menubarButton" id="shortestPathButton">Shortest Path</button>
+      <button class="menubarButton" id="resetGraphButton">Reset Graph</button>
+      <button class="menubarButton" id="helpButton">Help</button>
+      <button class="menubarButton" id="fitButton">Fit</button>
+      <button class="menubarButton" id="fitSelectedButton">Fit Selected</button>
+      <button class="menubarButton" id="clearSelectionsButton">Clear</button>
+      <button class="menubarButton" id="sfnButton">SFN</button>
+
+
+    </div> <!-- menubarDiv -->
+    <div id="cyDiv"></div>
+  </div> <!-- outermostDiv -->
+
+
         <script type="text/javascript" src="dist/bundle.js" charset="utf-8"></script>
+
+
     </body>
 </html>
