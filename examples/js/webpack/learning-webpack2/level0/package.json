@@ -1,0 +1,20 @@
+{
+  "name": "level0",
+  "version": "0.99.0",
+  "description": "learn to use basic webpack",
+  "main": "content.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "^0.28.0",
+    "style-loader": "^0.16.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paul-shannon/projects.git"
+  }
+}
