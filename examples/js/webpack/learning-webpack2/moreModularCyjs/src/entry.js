@@ -5,6 +5,8 @@ var bootstrapLoader = require('bootstrap-loader');
 var network = require("./data/cellphoneModel.json")
 var vizmap  = require("./data/networkStyle.json")
 var tinyApp = require("./tinyApp.js")
+var menus = require("./menus.js")
+menus.init();
 var firstSelectedNode = null;
 
 var cy = cytoscape({container: $("#cyDiv"),

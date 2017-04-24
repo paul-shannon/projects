@@ -91,7 +91,6 @@ module.exports = {
 
     enableDisableMenusBasedOnSelectedNodeCount: function(cy){
        var selectedNodeCount = cy.nodes(":selected").length
-        console.log("=== entering enableDisableMenusBasedOnSelectedNodeCount: " + selectedNodeCount);
         if(selectedNodeCount > 0){
           clearSelectionsButton.prop('disabled', false);
           sfnButton.prop("disabled", false);
