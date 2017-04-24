@@ -1,3 +1,70 @@
 body {
     background: lightgray;
 }
+
+
+.dropdown-submenu {
+   position: relative;
+   }
+
+.dropdown-submenu .dropdown-menu {
+   top: 0;
+   left: 100%;
+    margin-top: -1px;
+    }
+
+#outermostDiv{
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  overflow: hidden;
+  }
+
+#menubarDiv{
+  margin: auto;
+  margin-bottom: 3px;
+  width: 98%;
+  height: 40px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background-color: #EEE;
+  }
+
+#cyDiv{
+  margin: auto;
+  width: 98%;
+  height: 95%;
+  border: 1px solid #444;
+  border-radius:5px;
+  }
+
+.menubarButton{
+   margin-top: 7px;
+   margin-left: 5px;
+   font-size: 14px;
+   }
+
+.newMenubarButton{
+   background-color: #EEE;
+   font-size: 14px;
+   }
+
+.navbar-btn: {
+    color: #FFF;
+    background-color: #DDDDDD !important;
+    border-color: #2E6DA4 !important;
+    }
+
+.navbar-btn:hover {
+    color: #FFF;
+    background-color: #337AB7 !important;
+    border-color: #2E6DA4 !important;
+    }
+
+.rotate270 {
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+}
