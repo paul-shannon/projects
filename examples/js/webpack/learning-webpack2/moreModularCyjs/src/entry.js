@@ -8,6 +8,9 @@ var cy = cytoscape({container: $("#cyDiv"),
                     elements: network.elements,
                     layout: {name: "preset", fit: true},
                     style: vizmap});
+var tinyApp = require("./tinyApp.js")
+tinyApp.init()
+$(window).resize(tinyApp.handleWindowResize);
 window.cy = cy;
 
 
