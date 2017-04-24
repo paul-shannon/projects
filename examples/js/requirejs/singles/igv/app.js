@@ -43,5 +43,6 @@ require(['jquery', 'igv'], function ($, igv) {
         }; // options
         console.log("about to createBrowser");
         browser = igv.createBrowser(igvDiv, options);
+        setTimeout(function() {$("#tabs").tabs()}, 1000);
     }); // onready funcetion
 });

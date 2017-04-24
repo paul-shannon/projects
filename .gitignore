@@ -5,6 +5,10 @@ build/
 *.py[cod]
 node_modules/
 
+*.RData
+*.bed
+*.gz
+
 # Compiled javascript
 ipyleaflet/static/
 ipyleaflet/staticlab/

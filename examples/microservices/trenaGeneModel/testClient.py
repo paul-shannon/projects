@@ -44,6 +44,12 @@ msg = {"cmd": "createGeneModel", "status": "request", "callback": "",
 msg_json = json.dumps(msg)
 socket.send_string(msg_json)
 response = json.loads(socket.recv_string())
-assert(response['status'][0] == 'success')
-assert(response['payload'][0][:36] == '{"elements": [ {"data": {"id": "VGF"')
+status = response['status']
+payload = response['payload']
+assert(len(payload) == 2)
+network = payload['network']
+footprints = payload['footprints']
+assert(network[0][:36] == '{"elements": [ {"data": {"id": "VGF"')
+assert(len(footprints[0]) == 3)
+
 

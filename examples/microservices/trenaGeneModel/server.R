@@ -123,7 +123,8 @@ createGeneModel <- function(target.gene, region)
    tbl.03$beta[is.na(tbl.03$beta)] <- 0
    tbl.03$IncNodePurity[is.na(tbl.03$IncNodePurity)] <- 0
 
-   fpStarts.list <- lapply(tbl.02$gene, function(gene) subset(tbl.fp, tf==gene)[, c("tf", "start")])
+   #browser()
+   fpStarts.list <- lapply(tbl.02$gene, function(gene) subset(tbl.fp, tf==gene)[, c("tf", "chrom", "start", "endpos")])
    tbl.fpStarts <-  unique(do.call('rbind', fpStarts.list))
 
    tbl.04 <- merge(tbl.03, tbl.fpStarts, by.x="gene", by.y="tf")
@@ -157,15 +158,17 @@ test.createGeneModel <- function()
    target.gene <- "VGF"
    result <- createGeneModel(target.gene, region)
    tbl.gm <- result$tbl
-   checkEquals(dim(tbl.gm), c(2,6))
-   checkEquals(colnames(tbl.gm), c("gene", "gene.cor", "beta", "IncNodePurity", "start", "distance"))
+   checkEquals(dim(tbl.gm), c(2,8))
+   checkEquals(colnames(tbl.gm), c("gene", "gene.cor", "beta", "IncNodePurity","chrom",  "start", "endpos", "distance"))
    checkEquals(sort(tbl.gm$gene), c("MAZ", "NRF1"))
 
      # try a gene on the minus strand
    target.gene <- "MEF2C"
    region <- "5:88,904,000-88,909,000"
    result <- createGeneModel(target.gene, region)
-   tbl.gm <- result$tbl.gm
+   tbl.gm <- result$tbl
+   checkTrue(ncol(tbl.gm) == 8)
+   checkTrue(nrow(tbl.gm) > 50)
 
 } # test.createGeneModel
 #------------------------------------------------------------------------------------------------------------------------
@@ -234,10 +237,11 @@ test.tableToReducedGraph <- function()
    betas <- c(0.1255503, 0.1255503, 0.1255503, 0.1255503, 0.1448829, 0.0000000)
    IncNodePurities <- c(35.77897, 35.77897, 35.77897, 35.77897, 23.16562, 19.59660)
    starts <- c(5627705, 5628679, 5629563, 5629581, 5629563, 5629100)
+   endpos <- c(5627713, 5628687, 5629574, 5629592, 5629574, 5629112)
    distances <- c(-2995, -2021, -1137, -1119, -1137, -1600)
 
    tbl.1 <- data.frame(gene=genes, gene.cor=gene.cors, beta=betas, IncNodePurity=IncNodePurities,
-                       start=starts, distance=distances, stringsAsFactors=FALSE)
+                       start=starts, end=endpos, distance=distances, stringsAsFactors=FALSE)
 
    target.gene.1 <- "EPB41L3"
    tbl.list <- list(tbl.1)
@@ -322,10 +326,11 @@ test.tableToFullGraph <- function()
    betas <- c(0.1255503, 0.1255503, 0.1255503, 0.1255503, 0.1448829, 0.0000000)
    IncNodePurities <- c(35.77897, 35.77897, 35.77897, 35.77897, 23.16562, 19.59660)
    starts <- c(5627705, 5628679, 5629563, 5629581, 5629563, 5629100)
+   endpos <- c(5627713, 5628687, 5629574, 5629592, 5629574, 5629112)
    distances <- c(-2995, -2021, -1137, -1119, -1137, -1600)
 
    tbl.1 <- data.frame(gene=genes, gene.cor=gene.cors, beta=betas, IncNodePurity=IncNodePurities,
-                       start=starts, distance=distances, stringsAsFactors=FALSE)
+                       start=starts, end=endpos, distance=distances, stringsAsFactors=FALSE)
 
    target.gene.1 <- "EPB41L3"
    tbl.list <- list(tbl.1)
@@ -351,11 +356,10 @@ test.tableToFullGraph <- function()
    gene.cors <- c(0.9162040, 0.9162040, 0.9028613, -0.8256594, -0.8226802, -0.8226802)
    betas <- c(0.1988552, 0.1988552, 0.1492857, 0.0000000, 0.0000000, 0.0000000)
    IncNodePurities <- c(43.37913, 43.37913, 36.93302, 11.27543, 10.17957, 10.17957)
-   starts <- c(4451334, 4451640, 4452647, 4453748, 4453489, 4453491)
    distances <- c(-4001, -3695, -2688, -1587, -1846, -1844)
-
+   endpos <- starts + sample(8:12, 6, replace=TRUE)
    tbl.2 <- data.frame(gene=genes, gene.cor=gene.cors, beta=betas, IncNodePurity=IncNodePurities,
-                       start=starts, distance=distances, stringsAsFactors=FALSE)
+                       start=starts, end=endpos, distance=distances, stringsAsFactors=FALSE)
    target.gene.2 <- "DLGAP1"
 
    tbl.list <- list(tbl.2)
@@ -773,7 +777,7 @@ if(!interactive()) {
 
    errorFunction <- function(condition){
      printf("==== exception caught ===")
-     print(as.character(condition))       
+     print(as.character(condition))
      response <- list(cmd=msg$callack, status="error", callback="", payload=as.character(condition));
      send.raw.string(socket, toJSON(response))
      };
@@ -826,11 +830,15 @@ if(!interactive()) {
               print(5)
               names(tbl.list) <- targetGene
               graph <- tableToFullGraph(tbl.list)
+              print(colnames(tbl.gm))
+              tbl.fp <- tbl.gm[, c("chrom", "start", "endpos")]
               print(7)
               graph.pos <- addGeneModelLayout(graph)
               json.string <- graphToJSON(graph.pos)
               print(8)
-              response <- list(cmd=msg$callback, status="success", callback="", payload=json.string)
+              payload <- list(network=json.string, footprints=tbl.fp)
+              response <- list(cmd=msg$callback, status="success", callback="", payload=payload)
+              #response <- list(cmd=msg$callback, status="success", callback="", payload=json.string)
               }
            } # createGeneModel
         else {
