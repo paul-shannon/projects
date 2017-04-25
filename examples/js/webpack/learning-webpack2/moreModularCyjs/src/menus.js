@@ -5,7 +5,7 @@ var nextelKnockedOutEdges = [];
 var verizonKnockedOutEdges = [];
 var cellularOneKnockedOutEdges = [];
 var usCellularOneKnockedOutEdges = [];
-
+var selectedNodesKnockedOutEdges = [];
 
 function foo(){
     var x = 99;
@@ -59,7 +59,8 @@ module.exports = {
 
      $('#knockoutSelectedPhonesMenuItem').on("click", function(e){
         console.log("knockoutSelectedPhones");
-        cy.nodes(":selected").connectedEdges().hide();
+        var selectedNodes = cy.nodes(":selected")
+        selectedNodesKnockedOutEdges = cy.remove(selectedNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
@@ -243,6 +244,10 @@ module.exports = {
      $('#reactivateSelectedPhonesMenuItem').on("click", function(e){
         console.log("reactivateSelectedPhones");
         resetReactivateMenu();
+        if(selectedNodesKnockedOutEdges.length > 0){
+           cy.add(selectedNodesKnockedOutEdges)
+           selectedNodesKnockedOutEdges = [];
+           }
         });
 
      $('#reactivateByCarrierMenuHead').on("click", function(e){
