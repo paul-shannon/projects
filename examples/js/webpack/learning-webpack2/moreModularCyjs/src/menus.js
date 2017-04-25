@@ -76,6 +76,7 @@ module.exports = {
 
      $('#knockoutSelectedPhonesMenuItem').on("click", function(e){
         console.log("knockoutSelectedPhones");
+        cy.nodes(":selected").connectedEdges().hide();
         resetKnockoutMenu();
         });
 
@@ -115,6 +116,7 @@ module.exports = {
 
      $("#knockoutSprintPhonesMenuItem").on("click", function(e){
         console.log("knockout sprint phones");
+        cy.nodes("[carrier='Sprint']").connectedEdges().hide()
         resetKnockoutMenu();
         });
 
@@ -228,6 +230,7 @@ module.exports = {
 
      $("#reactivateSprintPhonesMenuItem").on("click", function(e){
         console.log("reactivate sprint phones");
+        cy.nodes("[carrier='Sprint']").connectedEdges().show();
         resetReactivateMenu();
         });
 

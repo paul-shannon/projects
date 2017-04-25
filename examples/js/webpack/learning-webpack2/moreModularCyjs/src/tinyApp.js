@@ -59,8 +59,8 @@ module.exports = {
        shortestPathButton.click(this.selectShortestPath);
 
        resetGraphButton = $("#resetGraphButton");
-       resetGraphButton.prop('disabled', true);
-       resetGraphButton.click(function(){});
+       resetGraphButton.prop('disabled', false);
+        resetGraphButton.click(function(){cy.edges().show(); cy.nodes().show()});
 
        helpButton = $("#helpButton");
        helpButton.click(function(){});
