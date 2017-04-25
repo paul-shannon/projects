@@ -7,6 +7,14 @@ var cellularOneKnockedOutEdges = [];
 var usCellularOneKnockedOutEdges = [];
 var selectedNodesKnockedOutEdges = [];
 
+var withEmailKnockedOutEdges = [];
+var withRoamingKnockedOutEdges = [];
+var withCameraKnockedOutEdges = [];
+
+var withoutEmailKnockedOutEdges = [];
+var withoutRoamingKnockedOutEdges = [];
+var withoutCameraKnockedOutEdges = [];
+
 function foo(){
     var x = 99;
     console.log(x);
@@ -187,31 +195,42 @@ module.exports = {
 
      $("#knockoutWithoutEmailMenuItem").on("click", function(e){
         console.log("w/o email");
+        var propertiedNodes = cy.filter(function(e){return (e.isNode() && !e.data("email"))});
+        withoutEmailKnockedOutEdges = cy.remove(propertiedNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
      $("#knockoutWithoutRoamingMenuItem").on("click", function(e){
         console.log("w/o roaming");
+        var propertiedNodes = cy.filter(function(e){return (e.isNode() && !e.data("roaming"))});
+        withoutRoamingKnockedOutEdges = cy.remove(propertiedNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
-     $("#knockoutWithoutPhotolMenuItem").on("click", function(e){
-        console.log("w/o photo");
+     $("#knockoutWithoutPhotoMenuItem").on("click", function(e){
+        console.log("w/o camera");
+        var propertiedNodes = cy.filter(function(e){return (e.isNode() && !e.data("camera"))});
+        withoutCameraKnockedOutEdges = cy.remove(propertiedNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
      $("#knockoutWithEmailMenuItem").on("click", function(e){
-        console.log("with email");
+        var propertiedNodes = cy.filter(function(e){return (e.isNode() && e.data("email"))});
+        withEmailKnockedOutEdges = cy.remove(propertiedNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
      $("#knockoutWithRoamingMenuItem").on("click", function(e){
         console.log("with roaming");
+        var propertiedNodes = cy.filter(function(e){return (e.isNode() && e.data("roaming"))});
+        withRoamingKnockedOutEdges = cy.remove(propertiedNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
-     $("#knockoutWithPhotolMenuItem").on("click", function(e){
-        console.log("with photo");
+     $("#knockoutWithCameraMenuItem").on("click", function(e){
+        console.log("with camera");
+        var propertiedNodes = cy.filter(function(e){return (e.isNode() && e.data("camera"))});
+        withCameraKnockedOutEdges = cy.remove(propertiedNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
@@ -296,31 +315,55 @@ module.exports = {
 
      $("#reactivateWithoutEmailMenuItem").on("click", function(e){
         console.log("w/o email");
+        if(withoutEmailKnockedOutEdges.length > 0){
+           cy.add(withoutEmailKnockedOutEdges);
+           withoutEmailEmailKnockedOutEges = [];
+           }
         resetReactivateMenu();
         });
 
      $("#reactivateWithoutRoamingMenuItem").on("click", function(e){
         console.log("w/o roaming");
+        if(withoutRoamingKnockedOutEdges.length > 0){
+           cy.add(withoutRoamingKnockedOutEdges);
+           withoutRoamingKnockedOutEges = [];
+           }
         resetReactivateMenu();
         });
 
-     $("#reactivateWithoutPhotolMenuItem").on("click", function(e){
-        console.log("w/o photo");
+     $("#reactivateWithoutPhotoMenuItem").on("click", function(e){
+        console.log("w/o camera");
+        if(withoutCameraKnockedOutEdges.length > 0){
+           cy.add(withoutCameraKnockedOutEdges);
+           withoutCameraKnockedOutEges = [];
+           }
         resetReactivateMenu();
         });
 
      $("#reactivateWithEmailMenuItem").on("click", function(e){
         console.log("with email");
+        if(withEmailKnockedOutEdges.length > 0){
+            cy.add(withEmailKnockedOutEdges);
+            withEmailKnockedOutEges = [];
+           }
         resetReactivateMenu();
         });
 
      $("#reactivateWithRoamingMenuItem").on("click", function(e){
         console.log("with roaming");
+        if(withRoamingKnockedOutEdges.length > 0){
+            cy.add(withRoamingKnockedOutEdges);
+            withRoamingKnockedOutEdges = [];
+           }
         resetReactivateMenu();
         });
 
-     $("#reactivateWithPhotolMenuItem").on("click", function(e){
-        console.log("with photo");
+     $("#reactivateWithCameraMenuItem").on("click", function(e){
+        console.log("with camera");
+        if(withCameraKnockedOutEdges.length > 0){
+            cy.add(withCameraKnockedOutEdges);
+            withCameraKnockedOutEdges = [];
+           }
         resetReactivateMenu();
         });
 
