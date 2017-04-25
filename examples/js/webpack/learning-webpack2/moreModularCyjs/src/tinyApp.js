@@ -31,7 +31,9 @@ module.exports = {
            targetNodeIndex = 0;  // just two possibilities, 0 or 1
            }
         var targetNode = selectedNodes[targetNodeIndex]
-        var d = cy.elements().dijkstra({root: rootNode, directed: true});
+        var functioningNodes = cy.nodes("[status!='knockedOut']")
+        var d = functioningNodes.dijkstra({root: rootNode, directed: true});
+        //var d = cy.elements().dijkstra({root: rootNode, directed: true});
         var path = d.pathTo(targetNode)
         var nodesInPath = path.nodes();
         nodesInPath.select()
