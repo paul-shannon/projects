@@ -4,7 +4,7 @@ var attKnockedOutEdges = [];
 var nextelKnockedOutEdges = [];
 var verizonKnockedOutEdges = [];
 var cellularOneKnockedOutEdges = [];
-var usCellularKnockedOutEdges = [];
+var usCellularOneKnockedOutEdges = [];
 
 
 function foo(){
@@ -112,6 +112,69 @@ module.exports = {
          resetKnockoutMenu();
          });
 
+      $("#knockoutNextelPhonesMenuItem").on("click", function(e){
+         console.log("knockout nextel phones");
+         var carrierNodes = cy.nodes("[carrier='Nextel']");
+         nextelKnockedOutEdges = cy.remove(carrierNodes.connectedEdges())
+         resetKnockoutMenu();
+         });
+
+      $("#knockoutVerizonPhonesMenuItem").on("click", function(e){
+         console.log("knockout Verizon phones");
+         var carrierNodes = cy.nodes("[carrier='Verizon Wireless']");
+         verizonKnockedOutEdges = cy.remove(carrierNodes.connectedEdges())
+         resetKnockoutMenu();
+         });
+
+      $("#knockoutCellularOnePhonesMenuItem").on("click", function(e){
+         console.log("knockout cellular one phones");
+         var carrierNodes = cy.nodes("[carrier='CellularOne']");
+         cellularOneKnockedOutEdges = cy.remove(carrierNodes.connectedEdges())
+         resetKnockoutMenu();
+         });
+
+      $("#knockoutUSCellularPhonesMenuItem").on("click", function(e){
+         console.log("knockout us cellular phones");
+         var carrierNodes = cy.nodes("[carrier='US Cellular']");
+         usCellularOneKnockedOutEdges = cy.remove(carrierNodes.connectedEdges())
+         resetKnockoutMenu();
+         });
+
+      $("#reactivateNextelPhonesMenuItem").on("click", function(e){
+         console.log("reactivate nextel phones");
+         if(nextelKnockedOutEdges.length > 0){
+            cy.add(nextelKnockedOutEdges)
+            nextelKnockedOutEdges = [];
+            }
+         resetReactivateMenu();
+         });
+
+      $("#reactivateVerizonPhonesMenuItem").on("click", function(e){
+         console.log("reactivate Verizon phones");
+         if(verizonKnockedOutEdges.length > 0){
+            cy.add(verizonKnockedOutEdges)
+            verizonKnockedOutEdges = [];
+            }
+         resetReactivateMenu();
+         });
+
+      $("#reactivateCellularOnePhonesMenuItem").on("click", function(e){
+         console.log("reactivate cellular one phones");
+         if(cellularOneKnockedOutEdges.length > 0){
+            cy.add(cellularOneKnockedOutEdges)
+            cellularOneKnockedOutEdges = [];
+            }
+         resetReactivateMenu();
+         });
+
+      $("#reactivateUSCellularPhonesMenuItem").on("click", function(e){
+         console.log("reactivate us cellular phones");
+         if(usCellularOneKnockedOutEdges.length > 0){
+            cy.add(usCellularOneKnockedOutEdges)
+            usCellularOneKnockedOutEdges = [];
+            }
+         resetReactivateMenu();
+         });
 
      $('a.leafMenuItem').on("click", function(e){
         console.log("leafMenuItem click");
