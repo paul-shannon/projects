@@ -1,3 +1,12 @@
+var sprintKnockedOutEdges = [];
+var tMobileKnockedOutEdges = [];
+var attKnockedOutEdges = [];
+var nextelKnockedOutEdges = [];
+var verizonKnockedOutEdges = [];
+var cellularOneKnockedOutEdges = [];
+var usCellularKnockedOutEdges = [];
+
+
 function foo(){
     var x = 99;
     console.log(x);
@@ -6,10 +15,8 @@ function foo(){
 function resetKnockoutMenu(){
         console.log("resetKnockoutMenu");
         $("#knockoutByCarrierMenuItems").hide();
-        //$("#knockoutWithoutPropertyMenuHead").hide()
         $("#knockoutByPropertiesMenuItems").hide();
         $("#knockoutWithPropertyMenuItems").hide();
-        //$("#knockoutWithoutPropertyMenuItems").hide();
         $("#knockoutByCarrierMenuItems").hide();
         $("#knockoutMenuItems").hide();
 };
@@ -17,37 +24,13 @@ function resetKnockoutMenu(){
 function resetReactivateMenu (){
         console.log("resetReactivateMenu");
         $("#reactivateByCarrierMenuItems").hide();
-        //$("#reactivateWithoutPropertyMenuHead").hide()
         $("#reactivateByPropertiesMenuItems").hide();
         $("#reactivateWithPropertyMenuItems").hide();
-        //$("#reactivateWithoutPropertyMenuItems").hide();
         $("#reactivateByCarrierMenuItems").hide();
         $("#reactivateMenuItems").hide();
 };
 
 module.exports = {
-
-    xresetKnockoutMenu: function(){
-        console.log("resetKnockoutMenu");
-        $("#knockoutByCarrierMenuItems").hide();
-        //$("#knockoutWithoutPropertyMenuHead").hide()
-        $("#knockoutByPropertiesMenuItems").hide();
-        $("#knockoutWithPropertyMenuItems").hide();
-        //$("#knockoutWithoutPropertyMenuItems").hide();
-        $("#knockoutByCarrierMenuItems").hide();
-        $("#knockoutMenuItems").hide();
-        },
-
-    xresetReactivateMenu: function(){
-        console.log("resetReactivateMenu");
-        $("#reactivateByCarrierMenuItems").hide();
-        //$("#reactivateWithoutPropertyMenuHead").hide()
-        $("#reactivateByPropertiesMenuItems").hide();
-        $("#reactivateWithPropertyMenuItems").hide();
-        //$("#reactivateWithoutPropertyMenuItems").hide();
-        $("#reactivateByCarrierMenuItems").hide();
-        $("#reactivateMenuItems").hide();
-        },
 
     init: function(){
 
@@ -95,35 +78,40 @@ module.exports = {
         console.log("knockoutByCarrierMenuHead click");
         $("#knockoutByCarrierMenuItems").toggle()
         $('#knockoutByPropertiesMenuItems').hide()
-          //e.stopPropagation();
-          //e.preventDefault();
-        });
-
-     /**********
-     $('.dropdown-submenu a.test').on("click", function(e){
-     console.log("submenu click");
-     console.log(e);
-     $(this).next('ul').toggle();
-     e.stopPropagation();
-     e.preventDefault();
-     });
-     ********/
-
-     $("#knockoutTMobilePhonesMenuItem").on("click", function(e){
-        console.log("knockout t-mobile phones");
-        resetKnockoutMenu();
         });
 
      $("#knockoutSprintPhonesMenuItem").on("click", function(e){
         console.log("knockout sprint phones");
-        cy.nodes("[carrier='Sprint']").connectedEdges().hide()
+        var carrierNodes = cy.nodes("[carrier='Sprint']");
+        sprintKnockedOutEdges = cy.remove(carrierNodes.connectedEdges())
         resetKnockoutMenu();
         });
 
-     $("#knockoutATTPhonesMenuItem").on("click", function(e){
-        console.log("knockout ATT phones");
+
+     $("#reactivateSprintPhonesMenuItem").on("click", function(e){
+         console.log("reactivate sprint phones");
+         if(sprintKnockedOutEdges.length > 0){
+            cy.add(sprintKnockedOutEdges)
+            sprintKnockedOutEdges = [];
+            }
+        resetReactivateMenu();
+        });
+
+
+     $("#knockoutTMobilePhonesMenuItem").on("click", function(e){
+        console.log("knockout t-mobile phones");
+        var carrierNodes = cy.nodes("[carrier='T-Mobile']");
+        tMobileKnockedOutEdges = cy.remove(carrierNodes.connectedEdges())
         resetKnockoutMenu();
         });
+
+      $("#knockoutATTPhonesMenuItem").on("click", function(e){
+         console.log("knockout ATT phones");
+         var carrierNodes = cy.nodes("[carrier='ATT']");
+         attKnockedOutEdges = cy.remove(carrierNodes.connectedEdges())
+         resetKnockoutMenu();
+         });
+
 
      $('a.leafMenuItem').on("click", function(e){
         console.log("leafMenuItem click");
@@ -194,6 +182,13 @@ module.exports = {
         resetReactivateMenu();
         });
 
+     $('#reactivateByCarrierMenuHead').on("click", function(e){
+        console.log("reactivateByCarrier");
+        $("#reactivateByCarrierMenuItems").toggle()
+        $('#reactivateByPropertiesMenuItems').hide()
+        //resetReactivateMenu();
+        });
+
      $("#reactivateByPropertiesMenuHead").on("click", function(e){
         console.log("reactivateByPropertiesMenuHead click");
           // toggle the "Phones with, Phones without submenu
@@ -205,36 +200,20 @@ module.exports = {
         $("#reactivateWithoutPropertyMenuHead").next("ul").hide()
         });
 
-     $('#reactivateByCarrierMenuHead').on("click", function(e){
-        console.log("reactivateByCarrierMenuHead click");
-        $("#reactivateByCarrierMenuItems").toggle()
-        $('#reactivateByPropertiesMenuItems').hide()
-          //e.stopPropagation();
-          //e.preventDefault();
-        });
-
-     /**********
-     $('.dropdown-submenu a.test').on("click", function(e){
-     console.log("submenu click");
-     console.log(e);
-     $(this).next('ul').toggle();
-     e.stopPropagation();
-     e.preventDefault();
-     });
-     ********/
-
      $("#reactivateTMobilePhonesMenuItem").on("click", function(e){
         console.log("reactivate t-mobile phones");
-        resetReactivateMenu();
-        });
-
-     $("#reactivateSprintPhonesMenuItem").on("click", function(e){
-        console.log("reactivate sprint phones");
-        cy.nodes("[carrier='Sprint']").connectedEdges().show();
+        if(tMobileKnockedOutEdges.length > 0){
+           cy.add(tMobileKnockedOutEdges)
+           tMobileKnockedOutEdges = [];
+           }
         resetReactivateMenu();
         });
 
      $("#reactivateATTPhonesMenuItem").on("click", function(e){
+         if(attKnockedOutEdges.length > 0){
+            cy.add(attKnockedOutEdges)
+            attKnockedOutEdges = [];
+            }
         console.log("reactivate ATT phones");
         resetReactivateMenu();
         });

@@ -1,11 +1,15 @@
 // tinyApp.js
 
 var sfnButton = null;
+var originalNetwork = null;
 
 module.exports = {
 
 
-    init: function(){
+    init: function(network){
+          // use a cheap trick to clone the network - make an
+          // entirely distinct copy.
+       originalNetwork = JSON.parse(JSON.stringify(network));
        console.log("hello fromm tinyApp.init");
        },
 
@@ -31,9 +35,9 @@ module.exports = {
            targetNodeIndex = 0;  // just two possibilities, 0 or 1
            }
         var targetNode = selectedNodes[targetNodeIndex]
-        var functioningNodes = cy.nodes("[status!='knockedOut']")
-        var d = functioningNodes.dijkstra({root: rootNode, directed: true});
-        //var d = cy.elements().dijkstra({root: rootNode, directed: true});
+        //var functioningNodes = cy.nodes("[status!='knockedOut']")
+        //var d = functioningNodes.dijkstra({root: rootNode, directed: true});
+        var d = cy.elements().dijkstra({root: rootNode, directed: true});
         var path = d.pathTo(targetNode)
         var nodesInPath = path.nodes();
         nodesInPath.select()
@@ -62,7 +66,9 @@ module.exports = {
 
        resetGraphButton = $("#resetGraphButton");
        resetGraphButton.prop('disabled', false);
-        resetGraphButton.click(function(){cy.edges().show(); cy.nodes().show()});
+        resetGraphButton.click(function(){
+          cy.add(originalNetwork.elements)
+          });
 
        helpButton = $("#helpButton");
        helpButton.click(function(){});
@@ -89,6 +95,9 @@ module.exports = {
        sfnButton = $("#sfnButton");
        sfnButton.prop('disabled', true);
        sfnButton.click(function(){cy.nodes(":selected").outgoers().targets().select()});
+
+
+
        }, // setupMenus
 
     enableDisableMenusBasedOnSelectedNodeCount: function(cy){

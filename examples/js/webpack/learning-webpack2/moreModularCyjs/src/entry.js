@@ -29,7 +29,7 @@ var cy = cytoscape({container: $("#cyDiv"),
                    } // ready
                }); // cytoscape ctor
 
-tinyApp.init()
+tinyApp.init(network)
 $(window).resize(tinyApp.handleWindowResize);
 tinyApp.handleWindowResize();
 tinyApp.setupMenus(cy);
