@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bootstrap-loader": "^2.0.0",
+    "cytoscape": "^3.0.0",
     "jquery": "^2.2.1",
     "webpack": "^2.4.1"
   },

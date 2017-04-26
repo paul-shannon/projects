@@ -6,7 +6,6 @@ all: clean install run
 
 clean:
 	- rm -rf dist/
-	- rm -rf package.json
 	- rm -rf node_modules
 
 install:
