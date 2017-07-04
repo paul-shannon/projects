@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>cyjs &amp; dt</title>
+     <script type="text/javascript" language="javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+     <script type="text/javascript" language="javascript" src="http://cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+     <link rel="stylesheet" type="text/css" href="http://cdn.datatables.net/1.10.7/css/jquery.dataTables.css">
+     <script src="https://cdn.rawgit.com/paul-shannon/CDN/master/js/cytoscape-3.0.0.js"></script>
+<style>
+body{
+  margin: 10px;
+  }
+
+th,td {
+   white-space: nowrap;
+   font-size:16px;
+   }
+
+#cyjsDiv{
+   float:left;
+   width:65%;
+   height: 800px;;
+   background-color: #EEE;
+   border: 1px solid gray;
+  }
+
+#tableDiv{
+   float:right;
+   width:30%;
+   height: 98%;
+   background-color:lightgreen;
+   border: 1px solid gray;
+   }
+
+</style>
+
+
+
+</style>
+
+
+<script>
+
+function handleWindowResizeEvent(){
+   console.log("resize");
+   }
+
+window.addEventListener("resize", handleWindowResizeEvent);
+
+var tableRef = null;
+
+dataSet = [[39, 71],
+           [30, 63],
+           [32, 63],
+           [34, 67],
+           [35, 68],
+           [36, 68],
+           [36, 70],
+           [30, 64]];
+
+var goData = [{"Term":"immune system process","Count":135,"Pvalue":6.1957e-56,"GOBPID":"GO:0002376"},
+              {"Term":"immune response","Count":111,"Pvalue":2.5698e-54,"GOBPID":"GO:0006955"},
+              {"Term":"regulation of immune system process","Count":97,"Pvalue":8.4143e-47,"GOBPID":"GO:0002682"},
+              {"Term":"positive regulation of immune system process","Count":81,"Pvalue":3.3387e-44,"GOBPID":"GO:0002684"},
+              {"Term":"regulation of immune response","Count":78,"Pvalue":9.2352e-43,"GOBPID":"GO:0050776"},
+              {"Term":"defense response","Count":93,"Pvalue":7.8254e-39,"GOBPID":"GO:0006952"},
+              {"Term":"positive regulation of immune response","Count":65,"Pvalue":4.0329e-38,"GOBPID":"GO:0050778"},
+              {"Term":"leukocyte activation","Count":64,"Pvalue":5.9603e-34,"GOBPID":"GO:0045321"},
+              {"Term":"cell activation","Count":67,"Pvalue":1.6972e-31,"GOBPID":"GO:0001775"},
+              {"Term":"activation of immune response","Count":52,"Pvalue":2.3592e-30,"GOBPID":"GO:0002253"},
+              {"Term":"immune response-regulating signaling pathway","Count":49,"Pvalue":3.4925e-28,"GOBPID":"GO:0002764"},
+              {"Term":"immune effector process","Count":56,"Pvalue":7.3814e-28,"GOBPID":"GO:0002252"},
+              {"Term":"immune response-activating signal transduction","Count":47,"Pvalue":1.4628e-27,"GOBPID":"GO:0002757"},
+              {"Term":"cytokine production","Count":52,"Pvalue":1.7288e-26,"GOBPID":"GO:0001816"},
+              {"Term":"inflammatory response","Count":53,"Pvalue":2.4288e-26,"GOBPID":"GO:0006954"},
+              {"Term":"lymphocyte activation","Count":52,"Pvalue":3.1995e-26,"GOBPID":"GO:0046649"},
+              {"Term":"regulation of leukocyte activation","Count":45,"Pvalue":6.589e-26,"GOBPID":"GO:0002694"},
+              {"Term":"regulation of cytokine production","Count":49,"Pvalue":1.2028e-25,"GOBPID":"GO:0001817"},
+              {"Term":"positive regulation of response to stimulus","Count":88,"Pvalue":1.2446e-25,"GOBPID":"GO:0048584"},
+              {"Term":"regulation of cell activation","Count":46,"Pvalue":1.434e-25,"GOBPID":"GO:0050865"},
+              {"Term":"innate immune response","Count":57,"Pvalue":6.4041e-25,"GOBPID":"GO:0045087"},
+              {"Term":"response to stimulus","Count":187,"Pvalue":2.68e-24,"GOBPID":"GO:0050896"},
+              {"Term":"regulation of response to stimulus","Count":118,"Pvalue":4.5758e-24,"GOBPID":"GO:0048583"},
+              {"Term":"leukocyte cell-cell adhesion","Count":44,"Pvalue":6.8389e-24,"GOBPID":"GO:0007159"},
+              {"Term":"leukocyte aggregation","Count":42,"Pvalue":3.3461e-23,"GOBPID":"GO:0070486"},
+              {"Term":"immune response-regulating cell surface receptor signaling pathway","Count":38,"Pvalue":1.1266e-22,"GOBPID":"GO:0002768"},
+              {"Term":"leukocyte migration","Count":38,"Pvalue":1.2442e-22,"GOBPID":"GO:0050900"},
+              {"Term":"immune response-activating cell surface receptor signaling pathway","Count":36,"Pvalue":4.4185e-22,"GOBPID":"GO:0002429"},
+              {"Term":"positive regulation of cytokine production","Count":38,"Pvalue":4.832e-22,"GOBPID":"GO:0001819"},
+              {"Term":"response to stress","Count":115,"Pvalue":1.0166e-21,"GOBPID":"GO:0006950"}];
+
+
+
+$(document).ready(function(){
+    cy = cytoscape({container: $('#cyjsDiv'), elements:{nodes:[{data:{id:'a'}}], edges:[{data:{source:'a', target:'a'}}]}})
+    $("#dataTable").DataTable( {
+        scrollX: true,
+        data: goData,
+        columns: [
+            {data: "Term"},
+            {data: "Count"},
+            {data: "Pvalue"},
+            {data: "GOBPID"}
+            ]
+        });
+     cy.fit(50);
+     });
+
+</script>
+</head>
+
+<html>
+<body>
+<div id="outermostDiv">
+  <div id="dataDiv">
+    <div id="cyjsDiv"></div>
+    <div id="tableDiv">
+      <table id="dataTable" class="display" width="100%"></table>
+    </div>
+   <div style="clear:both; font-size:1px;"></div>
+  </div>
+</div>
+</body>
+</html>
