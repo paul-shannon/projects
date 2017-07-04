@@ -18,7 +18,7 @@ th,td {
 
 #cyjsDiv{
    float:left;
-   width:65%;
+   width:68%;
    height: 800px;;
    background-color: #EEE;
    border: 1px solid gray;
@@ -95,7 +95,14 @@ $(document).ready(function(){
     cy = cytoscape({container: $('#cyjsDiv'), elements:{nodes:[{data:{id:'a'}}], edges:[{data:{source:'a', target:'a'}}]}})
     $("#dataTable").DataTable( {
         scrollX: true,
+        scrollY: 800,
         data: goData,
+    "bPaginate": false,
+    "bLengthChange": false,
+    "bFilter": true,
+    "bInfo": false,
+    "bAutoWidth": false,
+
         columns: [
             {data: "Term"},
             {data: "Count"},
@@ -115,7 +122,16 @@ $(document).ready(function(){
   <div id="dataDiv">
     <div id="cyjsDiv"></div>
     <div id="tableDiv">
-      <table id="dataTable" class="display" width="100%"></table>
+      <table id="dataTable" class="display" width="100%">
+          <thead>
+              <tr>
+                  <th>Term</th>
+                  <th>Count</th>
+                  <th>p-value</th>
+                  <th>ID</th>
+              </tr>
+          </thead>
+      </table>
     </div>
    <div style="clear:both; font-size:1px;"></div>
   </div>
