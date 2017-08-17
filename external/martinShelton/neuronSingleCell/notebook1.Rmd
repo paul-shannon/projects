@@ -1,0 +1,76 @@
+---
+title: "Heatmap & clustering exploration of neuronal rna-seq single cell expression data"
+output: html_notebook
+---
+```{r}
+library(RClustergrammer)
+stopifnot(packageVersion("RClustergrammer") >= "0.99.8")
+PORT_RANGE <- 9000:9010     # a port drawn from this range is used to communicate with RClustergrammer instances
+```
+
+Read the tab-delimited file into a data.frame, convert to a matrix using first column of table as 
+rownames for the matrix.
+```{r}
+tbl <- read.table("neuron.dg2.all.txt", sep="\t", as.is=TRUE, nrow=-1, header=TRUE)
+mtx <- as.matrix(tbl[, 2:ncol(tbl)])
+rownames(mtx) <- sub("qpcr-", "", tbl[,1])
+```
+examine the matrix in its raw form, before any transformations
+```{r}
+fivenum(mtx)
+```
+Needs transformation.  arc hyperbolic sin is a traditional choice
+```{r}
+mtx2 <- asinh((mtx))
+dim(mtx2)
+print(fivenum(mtx2))
+hist(mtx2)
+```
+As an experiment, apply asinh again:
+
+```{r}
+mtx3 <- asinh(mtx2)
+fivenum(mtx3)
+hist(mtx3)
+```
+Both mtx2 and mtx3 seem interesting.  
+Before clustering and viewing, load the gene metadata
+
+```{r}
+tbl.anno <- read.table("GeneList_Neu_SS_trimmed_ensembl.txt", sep="\t", quote="", header=TRUE, as.is=TRUE)
+```
+
+```{r}
+rcg1 <- RClustergrammer(PORT_RANGE)
+setBrowserWindowTitle(rcg1, "187 genes")
+clusterAndDisplay(rcg1, "hclust", mtx2)
+```
+Now try the twice-transformed mtx3 with new instance of RClustergrammer (which
+will display in a new tab (or window) in your browser)
+```{r}
+rcg2 <- RClustergrammer(PORT_RANGE)
+setBrowserWindowTitle(rcg2, "46 gene subet")
+clusterAndDisplay(rcg2, "hclust", mtx3)
+```
+Martin provided annotation on 39 (no 46) of the 187 genes in the matrix.
+Now explore those 39 genes, adding row metdata data categories for any insight that may yield
+```{r}
+tbl.anno <- read.table("GeneList_Neu_SS_trimmed_ensembl_2.txt", sep="\t", header=TRUE, as.is=TRUE)
+mtx4 <- mtx2[tbl.anno$Ensembl,] 
+rownames(mtx4) <- tbl.anno$GeneID
+tbl.rowMetadata <- tbl.anno[, 3, drop=FALSE]
+rownames(tbl.rowMetadata) <- tbl.anno$GeneID
+clusterAndDisplay(rcg2, "hclust", mtx4, tbl.rowMetadata)
+```
+The hierarchically clustered RClustergrammer display still needs some work: not all sensible clusters (sensible to our
+eyes) show up in the display.  That is fixable, I wager, with a bit of experimentation.
+
+Now try some selective display:
+```{r}
+glut.genes <- subset(tbl.anno, GroupID=="GLUT")$GeneID
+selectRows(rcg2, glut.genes)
+```
+```{r}
+showAll(rcg2)
+```
+
