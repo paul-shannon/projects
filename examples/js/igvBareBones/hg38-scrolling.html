@@ -1,0 +1,73 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> mm10</title>
+  <script src='http://code.jquery.com/jquery-1.12.4.min.js'></script>
+  <script src='http://code.jquery.com/ui/1.12.1/jquery-ui.min.js'></script>
+  <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+
+  <script  src='http://igv.org/web/release/1.0.8/igv-1.0.8.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.7/igv-1.0.7.css" >
+
+  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+
+<style>
+#outerDiv{
+   margin: 10px;
+   border-style: solid;
+   border-width: 5px;
+   border-color: blue;
+   border-radius: 10px;
+   overflow-x: scroll;
+   overflow-y: scroll;
+   height: 90%;
+   }
+
+#igvDiv{
+  padding-top: 10px;
+  padding-bottom: 20px;
+  }
+
+</style>
+
+</head>
+
+<body>
+
+<div id="outerDiv">
+  <div id="igvDiv"> </div>
+</div>
+
+<script type="text/javascript">
+  var browser;
+
+ $(document).ready(function () {
+    var igvDiv, options;
+    igvDiv = $("#igvDiv")[0];
+    options = {locus: "MEF2C",
+               minimumBases: 5,
+               showRuler: true,
+               reference: {id: "hg38",
+                     fastaURL: "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa",
+                  cytobandURL: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg38/cytoBandIdeo.txt"
+                  },
+               tracks: [
+                 {name: 'Gencode v24',
+                       url: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg38/genes/gencode.v24.annotation.sorted.gtf.gz",
+                  indexURL: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg38/genes/gencode.v24.annotation.sorted.gtf.gz.tbi",
+                  format: 'gtf',
+                  visibilityWindow: 2000000,
+                  displayMode: 'EXPANDED'
+                  },
+                 ]
+              }; // options
+        browser = igv.createBrowser(igvDiv, options);
+    });
+
+</script>
+
+</body>
+
+</html>
