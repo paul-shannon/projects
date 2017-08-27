@@ -1,0 +1,65 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> igv.js trackTester</title>
+  <script src='http://code.jquery.com/jquery-1.12.4.min.js'></script>
+  <script src='http://code.jquery.com/ui/1.12.1/jquery-ui.min.js'></script>
+  <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+  <script src='http://igv.org/web/release/1.0.6/igv-1.0.6.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+  <link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.6/igv-1.0.6.css">
+</head>
+
+<body>
+<div id="myDiv" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+<script type="text/javascript">
+  var browser;
+
+ $(document).ready(function () {
+    var div, options;
+    div = $("#myDiv")[0];
+           var options = {locus: "17:50,201,119-50,202,792", // COL1A1 promoter
+             reference: {id: "geneSymbols_hg38",
+                 fastaURL: "http://pshannon.systemsbiology.net/genomes/hg38.fa",
+                 cytobandURL: "http://pshannon.systemsbiology.net/genomes/cytoband.hg38.txt",
+                 },
+                tracks: [
+                  {name: 'Gencode v24',
+                   url: "http://pshannon.systemsbiology.net/hg38/gencode.v24.annotation.sorted.gtf.gz",
+                  indexURL: "http://pshannon.systemsbiology.net/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi",
+                  format: 'gtf',
+                  visibilityWindow: 2000000,
+                  displayMode: 'EXPANDED'
+                  },
+                 {name: 'geneSymbols_hg38',
+                  url: 'http://pshannon.systemsbiology.net/hg38/geneSymbolSearch.bed',
+                  indexed: false,
+                  searchable: true,
+                  visibilityWindow: 5000000,
+                  displayMode: 'COLLAPSED',
+                  color: "#448844"
+                  },
+
+                {name: "skin hint fp",
+                   //type: "wig",
+                   format: "bed",
+                   //min: 0,
+                   //max: 10,
+                   visibilityWindow: 100000,
+                   displayMode: "SQUISHED",
+                   indexed: true,
+                   url: "http://pshannon.systemsbiology.net/annotations/skin_hint.bed.gz",
+                   indexURL: "http://pshannon.systemsbiology.net/annotations/skin_hint.bed.gz.tbi",
+                   },
+                  ]
+              }; // options
+        browser = igv.createBrowser(div, options);
+    });
+
+</script>
+
+</body>
+
+</html>

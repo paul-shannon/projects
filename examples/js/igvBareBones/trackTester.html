@@ -1,0 +1,157 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> igv.js trackTester</title>
+  <script src='http://code.jquery.com/jquery-1.12.4.min.js'></script>
+  <script src='http://code.jquery.com/ui/1.12.1/jquery-ui.min.js'></script>
+  <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+  <!-- script  src="http://pshannon.systemsbiology.net/js/igv/11apr2017/igv-beta.js"></script -->
+  <!-- link rel="stylesheet" type="text/css" href="http://pshannon.systemsbiology.net/js/igv/11apr2017/igv-beta.css"-->
+
+  <script  src='http://igv.org/web/release/1.0.7/igv-1.0.7.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.7/igv-1.0.7.css" >
+
+  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+</head>
+
+<body>
+<div id="myDiv" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+<script type="text/javascript">
+  var browser;
+
+ $(document).ready(function () {
+    var div, options;
+    div = $("#myDiv")[0];
+    options = {locus: "5:88,621,548-88,999,827", //"22:40,000,000-40,200,000",
+               minimumBases: 5,
+               showRuler: true,
+               reference: {id: "geneSymbols_hg38",
+               fastaURL: "http://pshannon.systemsbiology.net/genomes/hg38.fa",
+               cytobandURL: "http://pshannon.systemsbiology.net/genomes/cytoband.hg38.txt",
+               },
+               tracks: [
+                 {name: 'Gencode v24',
+                   url: "http://pshannon.systemsbiology.net/hg38/gencode.v24.annotation.sorted.gtf.gz",
+                  indexURL: "http://pshannon.systemsbiology.net/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi",
+                  format: 'gtf',
+                  visibilityWindow: 2000000,
+                  displayMode: 'EXPANDED'
+                  },
+                 {name: 'geneSymbols_hg38',
+                  url: 'http://pshannon.systemsbiology.net/hg38/geneSymbolSearch.bed',
+                  indexed: false,
+                  searchable: true,
+                  visibilityWindow: 5000000,
+                  displayMode: 'COLLAPSED',
+                  color: "#448844"
+                  },
+               {name: "igap gwas",
+                  url: 'http://pshannon.systemsbiology.net/hg38/variants/igap.bed',
+                  indexed: false,
+                  searchable: true,
+                  displayMode: 'EXPANDED',
+                  color: "#884444"
+                  },
+               {name: "igap gwas scores",
+                  type: "wig",
+                  format: "bedgraph",
+                  min: 0,
+                  max: 20,
+                  url: 'http://pshannon.systemsbiology.net/hg38/variants/igap.bedgraph',
+                  indexed: false,
+                  //visibilityWindow: 1000000,
+                  color: "#4400AA"
+                  },
+
+                  {name: "aqp4 snps",
+                   type: "bed",
+                   format: "bed",
+                   min: 0,
+                   max: 10,
+                   color: "#FF00FF",
+                   indexed: false,
+                   url: "http://pshannon.systemsbiology.net/annotations/aqp4-chr18-snps.bed"
+                   },
+
+                  {name: "aqp4 fp",
+                   type: "bed",
+                   format: "bed",
+                   indexed: false,
+                   color: "black",
+                   url: "http://pshannon.systemsbiology.net/annotations/aqp4-fp.bed"
+                   },
+
+                  {name: "EncodeDHSclustered",
+                   type: "bed",
+                   format: "bed",
+                   min: 0,
+                   max: 10,
+                   color: "#AA0000",
+                   indexed: true,
+                   url: "http://pshannon.systemsbiology.net/annotations/wgEncodeRegDnaseClustered-hg38.bed.gz",
+                   indexURL: "http://pshannon.systemsbiology.net/annotations/wgEncodeRegDnaseClustered-hg38.bed.gz.tbi"
+                   },
+
+                  {name: "brain hint fp",
+                   type: "bed",
+                   format: "bed",
+                   min: 0,
+                   max: 10,
+                   color: "#AA0000",
+                   indexed: true,
+                   url: "http://pshannon.systemsbiology.net/annotations/brain_hint.bed.gz",
+                   indexURL: "http://pshannon.systemsbiology.net/annotations/brain_hint.bed.gz.tbi",
+                   },
+
+                  {name: "skin hint fp",
+                   type: "bed",
+                   format: "bed",
+                   min: 0,
+                   max: 10,
+                   color: "#AA0000",
+                   indexed: true,
+                   url: "http://pshannon.systemsbiology.net/annotations/skin_hint.bed.gz",
+                   indexURL: "http://pshannon.systemsbiology.net/annotations/skin_hint.bed.gz.tbi",
+                   },
+
+                  {name: "snp test",
+                   type: "bed",
+                   format: "bed",
+                   indexed: false,
+                   url: "http://pshannon.systemsbiology.net/annotations/chr5snps.bed",
+                   },
+
+
+                  {name: "motif gain",
+                   type: "bed",
+                   format: "bed",
+                   color: "#008800",
+                   indexed: false,
+                   url: "http://pshannon.systemsbiology.net/annotations/snp_gain.bed",
+                   },
+                  {name: "motif loss",
+                   type: "bed",
+                   format: "bed",
+                   color: "#880000",
+                   indexed: false,
+                   url: "http://pshannon.systemsbiology.net/annotations/snp_loss.bed",
+                   },
+                  {name: "motif loss and gain",
+                   type: "bed",
+                   format: "bed",
+                   color: "#880088",
+                   indexed: false,
+                   url: "http://pshannon.systemsbiology.net/annotations/snp_lossAndGain.bed",
+                   },
+                 ]
+              }; // options
+        browser = igv.createBrowser(div, options);
+    });
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> igv switch genomes</title>
+  <script src='http://code.jquery.com/jquery-1.12.4.min.js'></script>
+  <script src='http://code.jquery.com/ui/1.12.1/jquery-ui.min.js'></script>
+  <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+
+  <script  src='http://igv.org/web/release/1.0.8/igv-1.0.8.js'></script>
+  <link rel="stylesheet" type="text/css" href="https://igv.org/web/release/1.0.7/igv-1.0.7.css" >
+
+  <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+</head>
+
+<body>
+
+  <div id="buttonDiv">
+    <button>mm10</button>
+    <button>hg19</button>
+    <button>hg38</button>
+  </div>
+
+
+<div id="igvDiv" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+<script type="text/javascript">
+  var browser;
+
+ $(document).ready(function () {
+    var igvDiv, options;
+    igvDiv = $("#igvDiv")[0];
+    options = {locus: "5:88,621,548-88,999,827", //"22:40,000,000-40,200,000",
+               minimumBases: 5,
+               showRuler: true,
+               reference: {id: "geneSymbols_hg38",
+                     fastaURL: "http://pshannon.systemsbiology.net/genomes/hg38.fa",
+                  cytobandURL: "http://pshannon.systemsbiology.net/genomes/cytoband.hg38.txt",
+                  },
+               tracks: [
+                 {name: 'Gencode v24',
+                   url: "http://pshannon.systemsbiology.net/hg38/gencode.v24.annotation.sorted.gtf.gz",
+                  indexURL: "http://pshannon.systemsbiology.net/hg38/gencode.v24.annotation.sorted.gtf.gz.tbi",
+                  format: 'gtf',
+                  visibilityWindow: 2000000,
+                  displayMode: 'EXPANDED'
+                  },
+                 {name: 'geneSymbols_hg38',
+                  url: 'http://pshannon.systemsbiology.net/hg38/geneSymbolSearch.bed',
+                  indexed: false,
+                  searchable: true,
+                  visibilityWindow: 5000000,
+                  displayMode: 'COLLAPSED',
+                  color: "#448844"
+                  },
+                 ]
+              }; // options
+        browser = igv.createBrowser(igvDiv, options);
+    });
+
+</script>
+
+</body>
+
+</html>
