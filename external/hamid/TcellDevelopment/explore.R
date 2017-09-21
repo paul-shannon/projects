@@ -1,46 +1,49 @@
 library(trena)
 library(trenaViz)
 library(colorspace)
-# library(MotifDb)
+library(annotate)
+library(org.Mm.eg.db)
+library(MotifDb)
 #--------------------------------------------------------------------------------
 printf <- function(...) print(noquote(sprintf(...)))
-PORT.RANGE <- 8000:8020
 #--------------------------------------------------------------------------------
-stopifnot(packageVersion("trena")    >= "0.99.141")
-stopifnot(packageVersion("trenaViz") >= "0.99.7")
+stopifnot(packageVersion("trena")    >= "0.99.149")
+stopifnot(packageVersion("trenaViz") >= "0.99.11")
 
-tv <- trenaViz(PORT.RANGE, quiet=FALSE)
-setGenome(tv, "mm10")
+if(!exists("trena"))
+   trena <- Trena("mm10")
 
-tbl <- read.table("cytoscapeEdgeAnnot_11July2017.txt", sep="\t", header=TRUE, as.is=TRUE)
-tbl.xtab <- as.data.frame(table(c(tbl$Source, tbl$Target)))
-tbl.xtab <- tbl.xtab[order(tbl.xtab$Freq, decreasing=TRUE),]
-head(tbl.xtab)
-# DNMT3A is the most connected gene, a methyl transferase.
-# extended location: chr12:3,751,728-3,970,655  (218kb)
+PORT.RANGE <- 8000:8020
+if(!exists("tv")) {
+   tv <- trenaViz(PORT.RANGE, quiet=FALSE)
+   setGenome(tv, "mm10")
+   }
+#----------------------------------------------------------------------------------------------------
+readHamidsTCellNetwork <- function()
+{
+   tbl <- read.table("cytoscapeEdgeAnnot_11July2017.txt", sep="\t", header=TRUE, as.is=TRUE)
+   tbl.xtab <- as.data.frame(table(c(tbl$Source, tbl$Target)))
+   tbl.xtab <- tbl.xtab[order(tbl.xtab$Freq, decreasing=TRUE),]
+   head(tbl.xtab)
+      # DNMT3A is the most connected gene, a methyl transferase.
+      # extended location: chr12:3,751,728-3,970,655  (218kb)
 
-gene <- "Dnmt3a"
-chrom <- "chr12"
-loc.start <- 3751728
-loc.end   <- 3970655
+   tbl
 
-
-# ifng: Chr10:118441047-118445892 bp, + strand
-gene <- "Ifng"
-chrom <- "chr10"
-loc.start <- 118441047
-loc.end   <- 118445892
-
+} # readHamidsTCellNetwork
+#----------------------------------------------------------------------------------------------------
+# gene <- "Dnmt3a" chrom <- "chr12" loc.start <- 3751728 loc.end   <- 3970655
+# ifng: Chr10:118441047-118445892 bp, + strand gene <- "Ifng" chrom <- "chr10" loc.start <- 118441047 loc.end   <- 118445892
 #----------------------------------------------------------------------------------------------------
 #    The are 3 replicates for each of expression and ATAC-seq peaks for 'naive' T cells:
 #
-#     GSM2365761 	RNA_N1
-#     GSM2365762 	RNA_N2
-#     GSM2365763 	RNA_N3
+#     GSM2365761        RNA_N1
+#     GSM2365762        RNA_N2
+#     GSM2365763        RNA_N3
 #
-#     GSM2365799 	ATAC_N1
-#     GSM2365800 	ATAC_N2
-#     GSM2365801 	ATAC_N3
+#     GSM2365799        ATAC_N1
+#     GSM2365800        ATAC_N2
+#     GSM2365801        ATAC_N3
 #
 #   These define the starting state of the T cells (point of
 #   reference). At this point the cells are mature but "inexperienced".
@@ -59,69 +62,51 @@ loc.end   <- 118445892
 #   listed in the attached Cytoscape annot file.
 #
 #----------------------------------------------------------------------------------------------------
+calculateATACregions <- function(chrom, loc.start, loc.end, display)
+{
+   atac.files <- grep("_ATAC_", list.files("./data/"), v=TRUE)
+   short.names <- unlist(lapply(strsplit(atac.files, "_"),
+                          function(tokens)
+                             if(grepl("^N", tokens[3]))
+                                return(tokens[3])
+                             else
+                               sprintf("%s-%s", tokens[3], tokens[4])))
 
+   names(atac.files) <- short.names
+   showGenomicRegion(tv, sprintf("%s:%d-%d", chrom, loc.start, loc.end))
 
-files <- list(N1_1="GSM2365799_ATAC_N1_normalizedCounts.txt",         # naive
-              N2_1="GSM2365800_ATAC_N2_normalizedCounts.txt",
-              N3_1="GSM2365801_ATAC_N3_normalizedCounts.txt",
-              L5_1="GSM2365810_ATAC_L5_1_normalizedCounts.txt",       # liver tumor, 5 days after stimulation
-              L5_2="GSM2365811_ATAC_L5_2_normalizedCounts.txt",
-              L5_3="GSM2365812_ATAC_L5_3_normalizedCounts.txt",
-              L5_4="GSM2365813_ATAC_L5_4_normalizedCounts.txt",
-              L7_1="GSM2365814_ATAC_L7_1_normalizedCounts.txt",       # 7 days after
-              L7_2="GSM2365815_ATAC_L7_2_normalizedCounts.txt",
-              L7_3="GSM2365816_ATAC_L7_3_normalizedCounts.txt",
-              L14_1="GSM2365817_ATAC_L14_1_normalizedCounts.txt",     # 14 days
-              L14_2="GSM2365818_ATAC_L14_2_normalizedCounts.txt",
-              L14_3="GSM2365819_ATAC_L14_3_normalizedCounts.txt",
-              L21_1="GSM2365820_ATAC_L21_1_normalizedCounts.txt",     # 21 days
-              L21_2="GSM2365821_ATAC_L21_2_normalizedCounts.txt",
-              L21_3="GSM2365822_ATAC_L21_3_normalizedCounts.txt")
+   atac.file.count <- length(atac.files)
+   colors <- rainbow_hcl(atac.file.count)
+   i <- 0
+   tbls.regions <- list()
 
+   for(id in names(atac.files)[1:atac.file.count]){
+      i <- i + 1
+      filename <- file.path("./data/", atac.files[[id]])
+      tbl.tmp <- read.table(filename, header=TRUE, sep="\t", as.is=TRUE)
+        # Tcf7 is on the minus strand
+      track.start <- loc.start
+      track.end   <- loc.end
+      tbl.gene <- subset(tbl.tmp, chr==chrom & start >= track.start & end <= track.end)
+      if(nrow(tbl.gene) == 0){
+         printf("no atac regions found for %s:%d-%d in %s", chrom, track.start, track.end, filename)
+         next;
+         }
+      tbl.gene$sample = id
+      colnames(tbl.gene)[7] <- "score"
+      #printf("colors[%d]: %s", i, colors[i])
+      tbls.regions[[id]] <- tbl.gene
+      # if(display)
+        # addBedGraphTrackFromDataFrame(tv, id, tbl.gene[, c(1,2,3,7,5)], color=colors[i], minValue=0, maxValue=750)
+      }
 
-chrom.locs.list <- list()
-i <- 0
+   tbl.regions <- do.call(rbind, tbls.regions)[, c(1,2,3,7,8)]
+   tbl.regions <- tbl.regions[order(tbl.regions$start, decreasing=FALSE),]
+   rownames(tbl.regions) <- NULL
+   colnames(tbl.regions)[1] <- "chrom"   # better than "chr"
+   tbl.regions
 
-
-
-# tcf7
-gene <- "Tcf7"
-chrom <- "chr11"
-loc.start <- 52275902
-loc.end   <- 52293058
-#upstream.shoulder <- 5000
-#downstream.shoulder <- 2000
-
-showGenomicRegion(tv, sprintf("%s:%d-%d", chrom, loc.start, loc.end))
-
-#----------------------------------------------------------------------------------------------------
-#
-#----------------------------------------------------------------------------------------------------
-file.count <- length(files)
-colors <- rainbow_hcl(file.count)
-i <- 0
-
-tbls.regions <- list()
-
-for(id in names(files)[1:file.count]){
-   i <- i + 1
-   filename <- files[[id]]
-   tbl.tmp <- read.table(filename, header=TRUE, sep="\t", as.is=TRUE)
-     # Tcf7 is on the minus strand
-   track.start <- loc.start
-   track.end   <- loc.end
-   tbl.gene <- subset(tbl.tmp, chr==chrom & start >= track.start & end <= track.end)
-   tbl.gene$sample = id
-   colnames(tbl.gene)[7] <- "score"
-   printf("colors[%d]: %s", i, colors[i])
-   tbls.regions[[id]] <- tbl.gene
-   addBedGraphTrackFromDataFrame(tv, id, tbl.gene[, c(1,2,3,7,5)], color=colors[i], minValue=0, maxValue=750)
-   }
-
-tbl.regions <- do.call(rbind, tbls.regions)[, c(1,2,3,7,8)]
-tbl.regions <- tbl.regions[order(tbl.regions$start, decreasing=FALSE),]
-rownames(tbl.regions) <- NULL
-
+} # calculateATACregions
 #----------------------------------------------------------------------------------------------------
 # plot ataq-seq scores for each open region
 # a possible trend:
@@ -129,122 +114,282 @@ rownames(tbl.regions) <- NULL
 #     next seven are about half as much:    L5, L7
 #     final six are at about 10% of max:    L14, L21
 #----------------------------------------------------------------------------------------------------
-plot(tbl.regions[1:16, "score"], type="b", col="blue")
-plot(tbl.regions[17:32, "score"], type="b", col="darkgreen")
-plot(tbl.regions[33:48, "score"], type="b", col="red")
+plotAtaqSeqScores <- function(tbl.regions)
+{
+   plot(tbl.regions[1:16, "score"], type="b", col="blue")
+   plot(tbl.regions[17:32, "score"], type="b", col="darkgreen")
+   plot(tbl.regions[33:48, "score"], type="b", col="red")
 
+} # plotAtaSeqScores
 #----------------------------------------------------------------------------------------------------
 # what motifs are found in these open chromatin regions?
 #----------------------------------------------------------------------------------------------------
-mm <- MotifMatcher(genomeName="mm10")
+findAndDisplayMotifs <- function(tbl.regions, pwmMatchMinimumAsPercentage, source, trackName)
+{
+   stopifnot(source %in% c("MotifDb", "TFClass"))
+   pfms.mouse <- query(query(MotifDb, "jaspar2016"), "mmus")
+   pfms.human <- query(query(MotifDb, "jaspar2016"), "hsap")
+   pfms <- as.list(c(pfms.human, pfms.mouse))
+   mm <- MotifMatcher(genomeName="mm10", pfms)
 
-tbl.regions.uniq <- unique(tbl.regions[, 1:3])
-tmp <- lapply(seq_len(nrow(tbl.regions.uniq)), function(i) getSequence(mm, tbl.regions.uniq[i,]))
-tbl.seq <- do.call(rbind, tmp)
-tbl.seq$width <- 1 + tbl.seq$end - tbl.seq$start
-tbl.seq <- tbl.seq[, c("chr", "start", "end", "width", "seq")]
-motif.info <- findMatchesByChromosomalRegion(mm, tbl.regions.uniq, pwmMatchMinimumAsPercentage=92)
-tbl.motifs <- motif.info$tbl
-motif.tfs <- motif.info$tfs
-dim(tbl.motifs)
+   tbl.regions.uniq <- unique(tbl.regions[, 1:3])
+   print(tbl.regions.uniq)
+   tbl.motifs <- findMatchesByChromosomalRegion(mm, tbl.regions.uniq, pwmMatchMinimumAsPercentage=pwmMatchMinimumAsPercentage)
 
-#----------------------------------------------------------------------------------------------------
-# lay these out as an igv track
-#----------------------------------------------------------------------------------------------------
-addBedTrackFromDataFrame(tv, "motifs.92", tbl.motifs[, c("chrom", "motifStart", "motifEnd", "motifName", "motifRelativeScore")],
-                         color="red")
+   shortMotifs <- unlist(lapply(strsplit(tbl.motifs$motifName, "-"), function(tokens) tokens[length(tokens)]))
+   tbl.motifs$shortMotif <- shortMotifs
+   tbl.motifs <- associateTranscriptionFactors(MotifDb, tbl.motifs, source=source, expand.rows=TRUE)
+
+   motifs.without.tfs <- which(is.na(tbl.motifs$geneSymbol))
+   if(length(motifs.without.tfs) > 0){
+      printf("%d/%d motifs had no TF/geneSymbol", length(motifs.without.tfs), nrow(tbl.motifs))
+      tbl.motifs <- tbl.motifs[-motifs.without.tfs,]
+      }
 
 
+   motif.tfs <- sort(unique(tbl.motifs$geneSymbol))
+   addBedTrackFromDataFrame(tv, trackName,
+                            tbl.motifs[, c("chrom", "motifStart", "motifEnd", "motifName", "motifRelativeScore")],
+                            color="red")
+
+   invisible(tbl.motifs)
+
+} # findAndDisplayMotifs
 #----------------------------------------------------------------------------------------------------
 # read in the early-stage RNA, N1-3, L5_1-3, in which the ataq-seq data suggests the chromatin
 # is open
 #----------------------------------------------------------------------------------------------------
-files <- grep("RNA", list.files(), v=TRUE)
-sample.names <- unlist(lapply(strsplit(files, "_"), "[", 3))
-names(files) <- sample.names
-files <- as.list(files)
+readExpressionFiles <- function()
+{
+   rna.files <- grep("RNA", list.files("./data/"), v=TRUE)
+   if(length(rna.files) == 0){
+      stop(sprintf("cannot find rna files from current working directory, %s", getwd()))
+      }
+   printf ("read %d RNA files", length(rna.files))
 
-tbls.rna <- list()
-for(i in seq_len(length(files))){
-   file.name <- files[[i]]
-   sample.name <- names(files)[i]
-   tbl.tmp <- read.table(file.name, sep="\t", header=FALSE)
-   colnames(tbl.tmp) <- c("geneID", sample.names[i])
-   rownames(tbl.tmp) <- tbl.tmp$geneID
-   tbl.tmp <- tbl.tmp[, 2, drop=FALSE]   # drop the geneID column
-   tbls.rna[[i]] <- tbl.tmp
-   }
+   sample.name.tokens <- strsplit(rna.files, "_")
+   sample.names <- unlist(lapply(sample.name.tokens, function(tokens) sprintf("%s.%s", tokens[3], tokens[4])))
+   names(rna.files) <- sample.names
+   rna.files <- as.list(rna.files)
 
-#----------------------------------------------------------------------------------------------------
-# ensure that all geneIDs are the same, in the same order
-# then combine column-wise
-#----------------------------------------------------------------------------------------------------
-for(i in 2:6)
-   stopifnot(all(tbls.rna[[1]][, "geneID"] == tbls.rna[[i]][, "geneID"]))
+   tbls.rna <- list()
+   for(i in seq_len(length(rna.files))){
+      file.name <- file.path("./data", rna.files[[i]])
+      sample.name <- names(rna.files)[i]
+      tbl.tmp <- read.table(file.name, sep="\t", header=FALSE)
+      colnames(tbl.tmp) <- c("geneID", sample.names[i])
+      rownames(tbl.tmp) <- tbl.tmp$geneID
+      tbl.tmp <- tbl.tmp[, 2, drop=FALSE]   # drop the geneID column
+      tbls.rna[[i]] <- tbl.tmp
+      }
 
-tbl.rna <- do.call(cbind, tbls.rna)
+   #----------------------------------------------------------------------------------------------------
+   # ensure that all geneIDs are the same, in the same order
+   # then combine column-wise
+   #----------------------------------------------------------------------------------------------------
+   for(i in seq_len(length(tbls.rna)))
+      stopifnot(all(rownames(tbls.rna[[1]]) == rownames(tbls.rna[[i]])))
 
-#----------------------------------------------------------------------------------------------------
-# use the "inparanoid" package to map mouse entrez ids to human gene symbols, by way of ensemble
-# ortholog protein ids
-# first, lookup the ensembl protein ids, make them a new column in the table
-# for now duplicates are summarily (perhaps improperly) removed
-#----------------------------------------------------------------------------------------------------
-libary(org.Mm.eg.db)
-#tbl.mouseIDs <- select(org.Mm.eg.db, keys=rownames(tbl.rna), keytype="ENTREZID", columns=c("SYMBOL", "ENSEMBLPROT"))
-tbl.mouseIDs <- select(org.Mm.eg.db, keys=rownames(tbl.rna), keytype="ENTREZID", columns=c("SYMBOL"))
-dups <- which(duplicated(tbl.mouseIDs$ENTREZID))
-if(length(dups) > 0)
-   tbl.mouseIDs <- tbl.mouseIDs[-dups,]
-nas <- which(is.na(tbl.mouseIDs$ENSEMBLPROT))
-if(length(nas) > 0)
-   tbl.mouseIDs <- tbl.mouseIDs[-nas, , drop=FALSE]
-stopifnot(all(tbl.mouseIDs$ENTREZID == rownames(tbl.rna)))
-rownames(tbl.mouseIDs) <- tbl.mouseIDs$ENTREZID
-tbl.mouseIDs <- tbl.mouseIDs[, -1, drop=FALSE]
-colnames(tbl.mouseIDs) <- c("MmSYMBOL", "MmENSEMBLPROT")
-#----------------------------------------------------------------------------------------------------
-# now find the human ensembl protein id
-#----------------------------------------------------------------------------------------------------
-tbl.MmHs.prot <- select(hom.Mm.inp.db, keys=tbl.mouseIDs$MmENSEMBLPROT, columns="HOMO_SAPIENS", keytype="MUS_MUSCULUS")
-nas <- which(is.na(tbl.MmHs.prot$MUS_MUSCULUS))
-if(length(nas) > 0)
-   tbl.MmHs.prot <- tbl.MmHs.prot[-nas, , drop=FALSE]
+   tbl.rna <- do.call(cbind, tbls.rna)
+   gene.symbols <- select(org.Mm.eg.db, keys=rownames(tbl.rna), keytype="ENTREZID", columns=c("SYMBOL"))
+   tbl.rna$gene <- gene.symbols$SYMBOL
+   dups <- which(duplicated(tbl.rna$gene))
+   if(length(dups) > 0)
+      tbl.rna <- tbl.rna[-dups, , drop=FALSE]
+   nas <- which(is.na(tbl.rna$gene))
+   if(length(nas) > 0)
+      tbl.rna <- tbl.rna[-nas, , drop=FALSE]
 
-nas <- which(is.na(tbl.MmHs.prot$HOMO_SAPIENS))
-if(length(nas) > 0)
-   tbl.MmHs.prot <- tbl.MmHs.prot[-nas, , drop=FALSE]
+   rownames(tbl.rna) <- tbl.rna$gene
+   gene.column <- grep("gene", colnames(tbl.rna))
+   mtx.rna <- as.matrix(tbl.rna[, -gene.column])
+   rownames(mtx.rna) <- toupper(rownames(mtx.rna))
+   zeros <- which(rowSums(mtx.rna) == 0)
+   if(length(zeros) > 0)
+      mtx.rna <- mtx.rna[-zeros, , drop=FALSE]
 
-#----------------------------------------------------------------------------------------------------
-# only about 1 in 4 of the original mouse entrez ids map onto human proteins
-#----------------------------------------------------------------------------------------------------
-dim(tbl.MmHs.prot) # [1] 4959    2
+   printf("--- mtx.rna, %d x %d", nrow(mtx.rna), ncol(mtx.rna))
+   printf("mtx.rna before asinh transform: ")
+   print(fivenum(mtx.rna))
+   mtx.rna <- asinh(mtx.rna)
+   printf("mtx.rna after asinh transform: ")
+   print(fivenum(mtx.rna))
+   invisible(mtx.rna)
 
+} # readExpressionFiles
 #----------------------------------------------------------------------------------------------------
-# get the human gene symbols for these proteins
-#----------------------------------------------------------------------------------------------------
-tbl.HsSYMBOL <- select(org.Hs.eg.db, keys=tbl.MmHs.prot$HOMO_SAPIENS, keytype="ENSEMBLPROT", columns=c("SYMBOL"))
-mapped.to.Hs.genes <- tbl.HsSYMBOL$SYMBOL
-nas <- which(is.na(mapped.to.Hs.genes))
-length(nas) # [1] 2876
-mapped.to.Hs.genes <- mapped.to.Hs.genes[-nas]
-length(mapped.to.Hs.genes) # [1] 2098
-length(intersect(mapped.to.Hs.genes, motif.tfs))  # just 76
+makeModel <- function(trena, targetGene, targetGene.tss, tbl.motifs, mtx.rna, pcaMaxThreshold=1.0)
+{
+   printf("possible motifs for which we have expression: %d/%d",
+          length(intersect(tbl.motifs$geneSymbol, rownames(mtx.rna))), length(unique(tbl.motifs$geneSymbol)))
 
-#----------------------------------------------------------------------------------------------------
-# the utterly naive approach - capitalizing the mouse gene symbols,
-# intersects 270/292 tfs returned by motif matcher.  use that for now, pending Hamid's disbelief!
-#----------------------------------------------------------------------------------------------------
-dups <- which(duplicated(tbl.rna$MmSYMBOL))
-if(lenth(dups) > 0)
-   tbl.rna <- tbl.rna[-dups, , drop=FALSE)
-nas <- which(is.na(tbl.rna$MmSYMBOL))
-if(length(nas) > 0)
-   tbl.rna <- tbl.rna[-nas, , drop=FALSE]
+  chromosome <- "chr11"
 
-mtx.rna <- tbl.rna[, 1:6]
-colnames(mtx.rna) <- c("N1", "N2", "N3", "L5.1", "L5.2", "L5.3")
-rownames(mtx.rna) <- toupper(tbl.rna$MmSYMBOL)
-save(mtx.rna, file="mtx.rna.3N3L5.RData")
+  #solver.names <- c("lasso", "lassopv", "pearson", "randomForest", "ridge", "spearman")
+  solver.names <- c("lasso", "pearson", "randomForest", "ridge", "spearman")
 
-printf("possible motifs for which we have expression: %d/%d", length(intersect(motif.tfs, rownames(mtx.rna))), length(motif.tfs))
+  tbl.geneModel <- createGeneModel(trena, targetGene, solver.names, tbl.motifs, mtx.rna)
+  tbl.geneModel.strong <- subset(tbl.geneModel, pcaMax >= pcaMaxThreshold)
+
+  tbl.regulatoryRegions.strong <- subset(tbl.motifs, geneSymbol %in% tbl.geneModel.strong$gene)   # 71 rows
+
+    # add two additional column to describe the regulatory regions, given that the TCF7 tss is 52283013
+    #  motifName chrom motifStart motifEnd strand
+    #   MA0516.1 chr11   52282407 52282421      -
+    #
+    #    1) the distance (+ or -) to the targetGene's TSS
+    #    2) an id, e.g., "TCF7.fp.-.000606.MA0516.1"
+    #----------------------------------------------------------------------------------------------------
+
+  distance <- tbl.regulatoryRegions.strong$motifStart - targetGene.tss
+  direction <- rep("upstream", length(distance))
+  direction[which(distance < 0)] <- "downstream"
+  tbl.regulatoryRegions.strong$distance.from.tss <- distance
+  tbl.regulatoryRegions.strong$id <- sprintf("%s.fp.%s.%06d.%s", targetGene, direction, abs(distance), tbl.regulatoryRegions.strong$motifName)
+
+  #save(tbl.geneModel, tbl.geneModel.strong, tbl.regulatoryRegions.strong, file="tbl.geneModel.8sep2017.9am.RData")
+
+  tbl.tfBindingFreq <- as.data.frame(table(tbl.regulatoryRegions.strong$geneSymbol))
+  tbl.tfBindingFreq <- tbl.tfBindingFreq[order(tbl.tfBindingFreq$Freq, decreasing=TRUE),]
+  colnames(tbl.tfBindingFreq) <- c("gene", "binding.sites")
+  tbl.geneModel.strong <- merge(tbl.geneModel.strong, tbl.tfBindingFreq, by="gene")
+  tbl.geneModel.strong <- tbl.geneModel.strong[order(tbl.geneModel.strong$pcaMax, decreasing=TRUE),]
+  list(model=tbl.geneModel.strong, regions=tbl.regulatoryRegions.strong)
+
+} # makeModel
+#----------------------------------------------------------------------------------------------------
+simple.demo <- function()
+{
+   mtx.rna <- readExpressionFiles()
+   targetGene <- "TCF7"
+   targetGene.tss <- 52283013
+
+   showGenomicRegion(tv, "chr11:52,282,097-52,283,776")   # about 1300 kb straddling a TSS
+
+     # get that region in a list, a reusable data structure
+     # this also allows you to change the current region of interest interactively
+   current.region <- parseChromLocString(getGenomicRegion(tv))
+   removeTracksByName(tv, getTrackNames(tv)[-1])   # remove all but the first track,  Gencode
+
+   tbl.regions.atac <- with(current.region,
+                            calculateATACregions(chrom=chrom, loc.start=start,  loc.end=end, display=TRUE))
+
+      # pshannon added next four lines, emulating the ones which follow
+
+   rowsN <- tbl.regions.atac[1:3, ]
+   newN <- rowsN[1, ]
+   newN$score <- mean(rowsN$score)
+   newN$sample <- "N"
+
+   rows5 <- tbl.regions.atac[4:7, ]
+   new5 <- rows5[1, ]
+   new5$score <- mean(rows5$score)
+   new5$sample <- "TD5"
+
+   rows7 <- tbl.regions.atac[8:10, ]
+   new7 <- rows7[1, ]
+   new7$score <- mean(rows7$score)
+   new7$sample <- "TD7"
+
+   rows14 <- tbl.regions.atac[11:13, ]
+   new14 <- rows14[1, ]
+   new14$score <- mean(rows14$score)
+   new14$sample <- "TD14"
+
+   rows21 <- tbl.regions.atac[14:16, ]
+   new21 <- rows21[1, ]
+   new21$score <- mean(rows21$score)
+   new21$sample <- "TD21"
+
+   HB.tbl.regions.atac <- rbind(newN, new5, new7, new14, new21)
+   HB.tbl.regions.atac.toDisplay <- HB.tbl.regions.atac
+   colnames(HB.tbl.regions.atac.toDisplay)[1] <- "chr"
+   HB.tbl.regions.atac.toDisplay$score <- round(HB.tbl.regions.atac.toDisplay$score)
+
+   colors <- rainbow_hcl(nrow(HB.tbl.regions.atac.toDisplay))
+     # clear off all tracks but Gencode, the first track
+   removeTracksByName(tv, getTrackNames(tv)[-1])
+
+   for (i in 1:nrow(HB.tbl.regions.atac)) {
+     addBedGraphTrackFromDataFrame(tv,
+                                   HB.tbl.regions.atac.toDisplay$sample[i],
+                                   HB.tbl.regions.atac.toDisplay[i,],       # pshannon added [i,]
+                                   displayMode = "COLLAPSED",
+                                   color=colors[i],
+                                   minValue=0,
+                                   maxValue=max(HB.tbl.regions.atac.toDisplay$score))
+    }
+
+     # prepare to identify motifs in these regions: collapse the many tracks into the two
+     # genomic regions they cover
+   tbl.regions.collapsed <- unique(HB.tbl.regions.atac[, c("chrom", "start", "end")])
+
+      # the called function collects and provides motif pfms from MotifDb,
+      # in this case, all jaspar2016 human and mouse.
+      # other choices are certanly reasonable
+      # this step is slow because each motif in the pfms list is matched against
+      # the sequence in the two regions
+   tbl.motifs <- findAndDisplayMotifs(tbl.regions.collapsed,
+                                        pwmMatchMinimumAsPercentage=100,
+                                        source="MotifDb", # pshannon capitialized leading 'M'
+                                        trackName=sprintf("%s.%d%%", targetGene, 100))
+   # now make a trena model.
+       # the pcaMaxThreshold is generous: several low-significance gnees are therefore included
+       # but because the region is small, let's leave them in for now.
+   model <- makeModel(trena, targetGene, targetGene.tss, tbl.motifs, mtx.rna, pcaMaxThreshold=0.5)
+
+       # one option is to now examine model$model, keeping only those (for instance) with a
+       # random forest score > 10 or ....
+   model$model <- subset(model$model, rf.score > 10)
+       # eliminate all motifs whose transcription factors are not named in the gene model
+   model$regions <- subset(model$regions, geneSymbol %in% model$model$gene)
+       # just one model, but we can make more, and view them on demand in cytoscape.js
+   models <- list(simple=model)
+
+   g <- buildMultiModelGraph(tv, targetGene="TCF7", models) # comment out for speed
+   g.lo <- addGeneModelLayout(tv, g, xPos.span=1500)
+   setGraph(tv, g.lo, names(models))
+   setStyle(tv, "style.js")
+   fit(tv)
+
+   list(tv=tv, model=model)
+
+} # simple.demo
+#----------------------------------------------------------------------------------------------------
+hamids.new.mouse.stringent.motifs <- function(match.threshold)
+{
+   current.region <- parseChromLocString(getGenomicRegion(tv))
+   tbl.regions <- data.frame(chrom=current.region$chrom,
+                             start=current.region$start,
+                             end=current.region$end,
+                             stringsAsFactors=FALSE)
+
+   #organism.rows <- grep ('Mmusculus', values(MotifDb)$organism, ignore.case=TRUE)
+   #source.rows <- grep ('JASPAR', values(MotifDb)$dataSource, ignore.case=TRUE)
+   #mouse.jaspar.rows <- intersect (organism.rows, source.rows)	# 278 PWMs
+   #mouse.jaspar.pfms <- MotifDb [mouse.jaspar.rows]
+
+   mouse.jaspar.pfms <- query(query(MotifDb, "JASPAR"), "mmus")  # pshannon simplification
+
+   pfms <- as.list(mouse.jaspar.pfms)
+   motifMatcher <- MotifMatcher(genomeName="mm10", pfms)
+
+   tbl.motifs <- findMatchesByChromosomalRegion(motifMatcher, tbl.regions,
+						pwmMatchMinimumAsPercentage=match.threshold) # pshannon loosened constraint
+
+   tbl.toDisplay <- tbl.motifs[, c("chrom", "motifStart", "motifEnd",
+                                   "motifName", "motifScore")]
+   tmp <- strsplit(tbl.toDisplay$motifName, "-")
+   tbl.toDisplay$motifName <- unlist(lapply(tmp, function(x) x[3]))
+
+   trackName <- sprintf("mouse.%d", match.threshold)
+   addBedTrackFromDataFrame(tv, trackName=trackName, tbl.toDisplay, color="blue")
+
+} # hamids.new.mouse.stringent.motifs
+#----------------------------------------------------------------------------------------------------
+
+# >  source(explore.R)  # the latest version, which you will have just pulled down
+# >  x <- simple.demo()
+# >  names(x) # “tv” “model”
+# >  names(x$model) # “model” “regions”   model$model is the gene model data.frame.  regions is all the motif info
+# >  dim(x$model$regions) # 49 17
