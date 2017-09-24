@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ngl in tabs</title>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src='https://cdn.rawgit.com/arose/ngl/v0.10.3/dist/ngl.js'></script>
+
+<script>
+//----------------------------------------------------------------------------------------------------
+function resizeHandler()
+{
+  $("#tabs1").width(window.innerWidth);
+  $("#tabs1").height(window.innerHeight);
+  stage.handleResize();
+
+} // resizeHandler
+//----------------------------------------------------------------------------------------------------
+function initializeNGL()
+{
+  stage = new NGL.Stage("viewport");
+  window.addEventListener("resize", false);
+
+  function defaultStructureRepresentation( component ){
+     if( component.type !== "structure" ) return;
+     component.addRepresentation( "cartoon", {
+       aspectRatio: 3.0,
+       scale: 1.5,
+       colorScale: "Spectral",
+       colorScheme: "residueindex",
+       });
+    component.addRepresentation( "licorice", {
+       sele: "hetero and not ( water or ion )",
+       multipleBond: true,
+       scale: 2.5
+       });
+    component.addRepresentation( "spacefill", {
+       sele: "ion and not water",
+       scale: 0.5
+      });
+    };
+
+   // Pass that function as a callback whenever you load a structure file via {@link Stage#loadFile}.
+
+  var pdbID = "1d3h";
+  stage.loadFile("rcsb://" + pdbID).then(function(component){
+     defaultStructureRepresentation(component);
+     component.autoView();
+     });
+
+} // initializeNGL
+//----------------------------------------------------------------------------------------------------
+$(document).ready(function(){
+   //$("#tabs").tabs();
+   initializeNGL()
+   });
+
+
+//----------------------------------------------------------------------------------------------------
+</script>
+
+</head>
+<body>
+
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs1">1</a></li>
+    <li><a href="#tabs2">2</a></li>
+    <li><a href="#tabs3">3</a></li>
+  </ul>
+  <div id="tabs1">
+     ngl
+     <div id="viewport" style="width:100%; height:100%;"></div>
+  </div>
+  <div id="tabs2">
+    tab two
+  </div>
+  <div id="tabs3">
+     tab three
+  </div>
+</div>
+
+</body>
+</html>
+
+
