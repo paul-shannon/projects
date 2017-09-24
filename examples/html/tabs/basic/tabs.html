@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>basic jquery tabs</title>
+
+   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+   <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+   <link   rel="stylesheet" type="text/css"
+           href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.7/themes/smoothness/jquery-ui.css">
+
+</head>
+<!------------------------------------------------------------------------------------------------------------------------>
+<body>
+
+<div id = "MyTabbedView"></div>
+
+
+<div id = "Page1">Page 1<br/>Description of jQuery Tabs plugin</div>
+<div id = "Page2">Page 2<br/>How to use this plugin</div>
+<div id = "Page3">Page 3<br/>Download plugin</div>
+
+<script type = "text/javascript">
+    $(document).ready(function() {
+        jQuery.Tabs.initialize( "MyTabbedView",
+                                "300px", "150px",
+                                ['Description', 'How to Use', 'Download'],
+                                ['Page1',       'Page2',      'Page3'] );
+
+    });
+</script>
+</html>
