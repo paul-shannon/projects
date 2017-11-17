@@ -1,0 +1,22 @@
+version: "3.2"
+
+services:
+  c1:
+      build: ./c1/
+      volumes:
+          - type: volume
+            source: testVol
+            target: /home/c1/shared
+
+  c2:
+      build: ./c2/
+      command: bash
+      volumes:
+          - type: volume
+            source: testVol
+            target: /home/c2/shared
+
+# depends on prior existence of the volume:  docker volume create testVol
+volumes:
+   testVol:
+
