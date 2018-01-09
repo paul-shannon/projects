@@ -8,6 +8,7 @@ node_modules/
 *.RData
 *.bed
 *.gz
+*.CEL
 
 # Compiled javascript
 ipyleaflet/static/
@@ -15,3 +16,4 @@ ipyleaflet/staticlab/
 
 # OS X
 .DS_Store
+.Rproj.user
