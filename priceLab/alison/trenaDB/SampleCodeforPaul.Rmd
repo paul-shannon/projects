@@ -1,0 +1,78 @@
+---
+title: "TRENA Test Case"
+author: "Alison Paquette"
+date: "2/20/2018"
+output: html_document
+---
+
+#Step 0A: Load Functions
+```{r}
+
+source("https://bioconductor.org/biocLite.R")
+biocLite("TReNA")
+library(dplyr)
+library(data.table)
+# pull out the top TFs for a given target gene
+
+getTarget <- function(trn, geneA)
+{
+  temp <- subset(trn, target.gene == geneA)
+  temp[order(temp$pcaMax, decreasing=TRUE),]
+}
+# pull out the top targets for a given TF (without rank)
+getTF <- function(trn, geneA)
+{
+  temp <- subset(trn, gene == geneA)
+  temp[order(temp$pcaMax, decreasing=TRUE),]
+}
+
+
+
+#These are not on bioconductor TRENA?  Cory provided these
+```
+
+#Step 0B: Load TRN
+```{r}
+load("/Users/alisonpaquette/Dropbox/K99/PrelimData/TRN/placenta.draft.RData")
+placenta.rank<-unique(placenta.rank) #note: for some reason the matrix corey sent over has duplicated rows, need to remove for now
+```
+
+#Step 1: Create list of TFs
+```{r}
+TFactors<-as.data.frame(table(placenta.rank$gene))
+rownames(TFactors)<-TFactors$Var1
+```
+
+
+##Module 1: Print a list of target genes regulated by TF of Interest
+```{r}
+MyTF<-"SOX4"
+
+CheckTF<-function(MyTF,TFactors){
+check<-intersect(MyTF,rownames(TFactors))
+if (length(check)<1) {
+  print("Selected Gene is NOT a Transcription Factor in this model")
+}
+if (length(check)>1) {
+  print("Selected Gene IS a Transcription Factor in this model")
+}
+}
+CheckTF(MyTF,TFactors)
+
+X<-getTF(placenta.rank,MyTF)
+print(X)#Whole Outupt
+print(X$target.gene)
+
+```
+
+
+##Module 2: Identify transcriptional regulators of your gene of interest
+```{r}
+MyGene<-"BMP2"
+
+X<-getTarget(placenta.rank,MyGene)
+print(X)#Whole Outupt
+print(X$gene)
+
+```
+

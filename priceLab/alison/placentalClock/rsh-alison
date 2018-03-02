@@ -1,0 +1,174 @@
+
+R version 3.4.1 (2017-06-30) -- "Single Candle"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> > if(identical(getOption('pager'), file.path(R.home('bin'), 'pager'))) # rather take the ESS one
++       options(pager='cat')
+> options(STERM='iESS', str.dendrogram.last="'", editor='emacsclient', show.error.locations=TRUE)
+> dir()
+[1] "~$TableofDNAsehypersensitivitydataforpaul.xlsx" "dhsSources.tsv"                                 "ResearchStrategy2.docx"                         "SpecificAims823CRHChanges.docx"                 "SRP094910GeneData.RData"                        "TableofDNAsehypersensitivitydataforpaul.txt"    "TableofDNAsehypersensitivitydataforpaul.xlsx"
+> wdth(100)
+> dir()
+[1] "~$TableofDNAsehypersensitivitydataforpaul.xlsx"
+[2] "dhsSources.tsv"
+[3] "ResearchStrategy2.docx"
+[4] "SpecificAims823CRHChanges.docx"
+[5] "SRP094910GeneData.RData"
+[6] "TableofDNAsehypersensitivitydataforpaul.txt"
+[7] "TableofDNAsehypersensitivitydataforpaul.xlsx"
+> print(load("SRP094910GeneData.RData"))
+[1] "GeneData"
+> class(GeneData)
+[1] "data.frame"
+> dim(GeneData)
+[1] 16407   199
+> fivenum(GeneData)
+Error in `[.data.frame`(x, order(x, na.last = na.last, decreasing = decreasing)) :
+  undefined columns selected
+> x <- GeneData
+> x[1:10, 1:10]
+   ensembl_gene_id hgnc_symbol SRR5137814 SRR5137815 SRR5137816 SRR5137817 SRR5137818 SRR5137819
+1  ENSG00000000003      TSPAN6   2.785827   2.517209   2.517108   2.289190  2.2101146  3.1244261
+2  ENSG00000000419        DPM1   2.499179   2.278109   2.869741   2.159125  2.0417902  2.4859084
+3  ENSG00000000457       SCYL3   2.339149   2.496286   2.463299   2.456154  2.6462900  2.5619718
+4  ENSG00000000460    C1orf112   1.630691   1.007473   1.038808   1.408779  1.9398156  0.9446588
+5  ENSG00000000971         CFH   1.139145   1.481261   2.236388   2.016602  1.8471213  1.5999550
+6  ENSG00000001036       FUCA2   2.499824   2.538888   2.332105   2.325347  2.4818507  2.8795328
+7  ENSG00000001084        GCLC   1.759027   1.736075   1.641470   1.521828  1.4802814  1.7528621
+8  ENSG00000001167        NFYA   2.701502   2.771139   2.869017   2.712966  2.6148866  2.7855233
+9  ENSG00000001460       STPG1   1.415323   1.792668   1.050411   1.238709  0.9241471  0.8817007
+10 ENSG00000001461      NIPAL3   2.083616   1.840562   2.071643   1.944451  2.1728275  2.7895305
+   SRR5137820 SRR5137821
+1    2.652709   2.486109
+2    2.091523   1.705509
+3    2.447897   2.326916
+4    1.561226   1.859377
+5    1.924112   2.352631
+6    1.852790   2.563595
+7    1.525551   1.877540
+8    2.516159   2.427919
+9    1.201143   1.202567
+10   2.549893   1.962394
+> mtx.rna <- as.matrix(GeneData[, 3:199])
+> fivenum(mtx.rna)
+[1]  0.000000  1.411374  1.992753  2.648852 13.378017
+> length(which(duplicated(x$hgnc_symbol)))
+[1] 2019
+> length(which(duplicated(x$ensembl_gene_id)))
+[1] 0
+> length(which(duplicated(GeneData$ensembl_gene_id))) # [1] 0
+[1] 0
+> length(geneSymbols.duplicated)
+Error: object 'geneSymbols.duplicated' not found
+> geneSymbols.duplicated <- which(duplicated(GeneData$hgnc_symbol))
+> length(geneSymbols.duplicated)
+[1] 2019
+> if(length(geneSymbols.duplicated) > 0)
++    mtx.rna <- mtx.rna[-geneSymbols.duplicated,]
+> print(load("SRP094910GeneData.RData"))   # 16407 x 199
+[1] "GeneData"
+> mtx.rna <- as.matrix(GeneData[, 3:199])
+> fivenum(mtx.rna) # [1]  0.000000  1.411374  1.992753  2.648852 13.378017
+[1]  0.000000  1.411374  1.992753  2.648852 13.378017
+> # give rownames to the matrx.  incautiously, use gene symbols, removing duplicates
+> geneSymbols <- GeneData$hgnc_symbol
+> rows.to.remove <- which(duplicated(geneSymbols)
++ length(rows.to.remove)
+Error: unexpected symbol in:
+"rows.to.remove <- which(duplicated(geneSymbols)
+length"
+> if(length(rows.to.remove) > 0){
++    mtx.rna <- mtx.rna[-rows.to.remove,]
++    geneSymbols <- geneSymbols[rows.to.remove]
++    }
+Error: object 'rows.to.remove' not found
+>
+> rownames(mtx.rna) <- geneSymbols
+> geneSymbols <- GeneData$hgnc_symbol
+> rows.to.remove <- which(duplicated(geneSymbols)
++   C-c C-c
+> geneSymbols <- GeneData$hgnc_symbol
+> rows.to.remove <- which(duplicated(geneSymbols))
+> length(rows.to.remove)
+[1] 2019
+> if(length(rows.to.remove) > 0){
++    mtx.rna <- mtx.rna[-rows.to.remove,]
++    geneSymbols <- geneSymbols[rows.to.remove]
++    }
+> rownames(mtx.rna) <- geneSymbols
+Error in dimnames(x) <- dn :
+  length of 'dimnames' [1] not equal to array extent
+> length(geneSymbols)
+[1] 2019
+> print(load("SRP094910GeneData.RData"))   # 16407 x 199
+[1] "GeneData"
+> mtx.rna <- as.matrix(GeneData[, 3:199])
+> fivenum(mtx.rna) # [1]  0.000000  1.411374  1.992753  2.648852 13.378017
+[1]  0.000000  1.411374  1.992753  2.648852 13.378017
+> # give rownames to the matrx.  incautiously, use gene symbols, removing duplicates
+> geneSymbols <- GeneData$hgnc_symbol
+> rows.to.remove <- which(duplicated(geneSymbols))
+> length(rows.to.remove)
+[1] 2019
+> if(length(rows.to.remove) > 0){
++    mtx.rna <- mtx.rna[-rows.to.remove,]
++    geneSymbols <- geneSymbols[-rows.to.remove]
++    }
+>
+> rownames(mtx.rna) <- geneSymbols
+> dim(mtx.rna)
+[1] 14388   197
+> dim(mtx.rna)
+[1] 14388   197
+> fivenum(mtx.rna)
+[1]  0.000000  1.495579  2.061975  2.708345 13.378017
+>library(RPostgreSQL)
+Loading required package: DBI
+> db <- dbConnect(PostgreSQL(), user= "trena", password="trena", host=database.host)
+Error in postgresqlNewConnection(drv, ...) :
+  object 'database.host' not found
+> database.host <- "khaleesi"
+> db <- dbConnect(PostgreSQL(), user= "trena", password="trena", host=database.host)
+
+Error in postgresqlNewConnection(drv, ...) :
+  RS-DBI driver: (could not connect trena@khaleesi:5432 on dbname "trena": could not connect to server: Operation timed out
+	Is the server running on host "khaleesi" (10.0.176.30) and accepting
+	TCP/IP connections on port 5432?
+)
+> >
+>
+> dbname <- "extraembryonic_structure_hint_20"
+> db <- dbConnect(PostgreSQL(), user= "trena", password="trena", host=database.host, dbname=dbname)
+Error in postgresqlNewConnection(drv, ...) :
+  RS-DBI driver: (could not connect trena@khaleesi:5432 on dbname "extraembryonic_structure_hint_20": could not connect to server: Operation timed out
+	Is the server running on host "khaleesi" (10.0.176.30) and accepting
+	TCP/IP connections on port 5432?
+)
+> library(RPostgreSQL)
+> database.host <- "khaleesi.systemsbiology.net"
+> dbname <- "extraembryonic_structure_hint_20"
+> db <- dbConnect(PostgreSQL(), user= "trena", password="trena", host=database.host, dbname=dbname)
+Error in postgresqlNewConnection(drv, ...) :
+  RS-DBI driver: (could not connect trena@khaleesi.systemsbiology.net:5432 on dbname "extraembryonic_structure_hint_20": could not connect to server: Operation timed out
+	Is the server running on host "khaleesi.systemsbiology.net" (10.0.176.30) and accepting
+	TCP/IP connections on port 5432?
+)
+>    mtx.rna <- readExpressionFiles()
+Error in readExpressionFiles() :
+  could not find function "readExpressionFiles"
+>
