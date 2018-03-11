@@ -8,7 +8,7 @@ installData:
 	cp placenta.draft.RData /tmp/shinyServer/srv/appdir/
 
 run:
-	docker run --rm -p 3838:3838 \
+	docker run -d -p 3838:3838 \
               -v /tmp/shinyServer/srv:/srv/shiny-server/ \
               -v /tmp/shinyServer/varlog:/var/log/shiny-server/ \
               -v /tmp/shinyServer/varlib:/var/lib/shiny-server \
