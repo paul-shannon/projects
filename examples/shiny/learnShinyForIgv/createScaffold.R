@@ -1,0 +1,8 @@
+library(htmlwidgets)
+library(devtools)
+devtools::create("igv")
+setwd("igv")
+scaffoldWidget("igv", edit=FALSE)
+install()
+library(igv)
+igv("hello from igv")
