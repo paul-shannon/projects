@@ -27,7 +27,7 @@ HTMLWidgets.widget({
                   },
                  ]
               }; // options
-           browser = igv.createBrowser(igvDiv, options);
+           igvBrowser = igv.createBrowser(igvDiv, options);
           },
       resize: function(width, height) {
          console.log("resize: " + width + ", " + height);
