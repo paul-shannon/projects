@@ -2,10 +2,21 @@ library(shiny)
 library(DT)
 library(igv)
 library(htmlwidgets)
+library(GenomicRanges)
 #----------------------------------------------------------------------------------------------------
 library(MEF2C.data)
-mef2c <- MEF2C.data()
-addResourcePath("igvdata", "igvdata")
+
+if(!exists("mef2c"))
+   mef2c <- MEF2C.data()
+
+source("filterSnps.R")
+
+addResourcePath("igvdata", "igvdata") # so the shiny webserver can see, and return track files for igv
+#----------------------------------------------------------------------------------------------------
+currentTracks <- list()
+currentFilters <- list()
+currentShoulder <- 0
+currentModel <- "model_cer"
 #----------------------------------------------------------------------------------------------------
 ui <- fluidPage(
 
@@ -28,30 +39,34 @@ ui <- fluidPage(
                        "TSS +/- 2kb" = "tss_2kb",
                        "TSS +/- 5kb" = "tss_5kb",
                        "Study region" = "studyRegion")),
-        br(),
+
+        checkboxGroupInput("tracks", "Genome Tracks - toggle display",
+                           c("Enhancers" = "enhancers",
+                             "TSS" = "tss")),
 
         radioButtons("motifTfMapping", "Map Motifs to TFs Using",
                      c("MotifDb (parsimonious)" = "motifdb",
                        "TFClass (expansive)" = "tfclass",
                        "Both" = "both")),
-        br(),
 
-        checkboxGroupInput("filters", "Filters - one or more",
-                           c("None" = "noFilters",
-                             "Enhancers" = "enhancers",
-                             "Footprints" = "footprints",
-                             "Model 1" = "model_1",
-                             "Model 2" = "model_2",
-                             "Model 3" = "model_3"),
-                             "noFilters"),
+        checkboxGroupInput("filters", "Filters",
+                           c("Enhancers" = "enhancers",
+                             "Footprints" = "footprints")),
+
+        radioButtons("model.trn", "Choose Model",
+                    c("Model 1 (Mayo cerebellum)" = "model_cer",
+                      "Model 2 (Mayo temporal cortex)" = "model_tcx",
+                      "Model 3 (ROSMAP)" = "model_ros")),
 
         sliderInput("snpShoulder",
-                    "SNP shoulder", #"SNP shoulder (upstream and down):",
+                    "SNP shoulder",
                     value = 0,
                     min = 0,
                     max = 100),
-        actionButton("showSNPsButton", "Find intersecting SNPs")
+        actionButton("showSNPsButton", "Show all SNPs"),
+        actionButton("findSnpsInModelButton", "Find intersecting SNPs")
         ),
+
      mainPanel(
        tabsetPanel(type="tabs",
                    id="trenaTabs",
@@ -73,15 +88,46 @@ server <- function(input, output, session) {
     # thereby establishing the reactive chain.
 
    observeEvent(input$showSNPsButton, {
-      #updateTabsetPanel(session, "trenaTabs", selected="debugTab")
       temp.filename <- calculateVisibleSNPs(isolate(input$targetGene),
                                      isolate(input$roi),
                                      isolate(input$filters),
                                      isolate(input$snpShoulder))
-     #temp.filename <- "tmp1521154368.bedGraph"
      session$sendCustomMessage(type="displaySnps", message=(list(filename=temp.filename)))
-     #session$sendCustomMessage(type="roi", message=(list(roi="TREM2")))
      })
+
+   observeEvent(input$findSnpsInModelButton, {
+      trena.model <- isolate(input$model.trn)
+      filters <- isolate(input$filters)
+      snpShoulder <- isolate(input$snpShoulder)
+      useFilters(session, filters, trena.model, snpShoulder)
+      })
+
+   observeEvent(input$snpShoulder, {
+      currentShoulder <- input$snpShoulder
+      })
+
+   observeEvent(input$tracks, {
+     # updateTabsetPanel(session, "trenaTabs", selected="debugTab")
+     trackNames <- isolate(input$tracks)
+     printf("currentTracks: %s", paste(currentTracks, collapse=","))
+     newTracks <- setdiff(trackNames, currentTracks)
+     printf("newTracks: %s", paste(newTracks, collapse=","))
+     if(length(newTracks) > 0){
+        output$debug <- renderPrint({newTracks})
+        displayTrack(session, newTracks)
+        }
+     currentTracks <<- sort(unique(unlist(c(currentTracks, newTracks))))
+     })
+
+   observeEvent(input$filters, {
+      currentFilters <- input$filters
+      print(paste(currentFilters, collapse=","))
+      })
+
+   observeEvent(input$model.trn, {
+      currentModel <- input$model.trn
+      print(paste(currentFilters, collapse=","))
+      })
 
    observeEvent(input$roi, {
      currentValue = input$roi
@@ -116,11 +162,56 @@ server <- function(input, output, session) {
 calculateVisibleSNPs <- function(targetGene, roi, filters, snpShoulder)
 {
    #return(sprintf("calculateVisibleSNPs(%s), %s, %s, %d", date(), targetGene, roi, snpShoulder))
-   tbl.snps <- mef2c@misc.data$MAYO.eqtl.snps[, c("chrom", "start", "end", "score", "name")]
+   tbl.mayo.snps <- mef2c@misc.data$MAYO.eqtl.snps[, c("chrom", "start", "end", "score")]
+   tbl.mayo.snps <- tbl.mayo.snps[order(tbl.mayo.snps$start, decreasing=FALSE),]
+
+   tbl.igap.snps <- mef2c@misc.data[["IGAP.snpChip"]][, c("chrom", "start", "end", "score")]
+   tbl.igap.snps <- tbl.igap.snps[order(tbl.igap.snps$start, decreasing=FALSE),]
+
    temp.filename <- sprintf("igvdata/tmp%d.bedGraph", as.integer(Sys.time()))
-   write.table(tbl.snps, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE, file=temp.filename)
+   write.table(tbl.igap.snps, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE, file=temp.filename)
    return(temp.filename)
 
 } # calculateVisibleSNPs
 #--------------------------------------------------------------------------------
-shinyApp(ui, server)
+displayTrack <- function(session, trackNames)
+{
+   if("enhancers" %in% trackNames){
+      tbl.enhancers <- mef2c@misc.data$enhancer.locs
+      temp.filename <- sprintf("igvdata/tmp%d.bed", as.integer(Sys.time()))
+      write.table(tbl.enhancers, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE, file=temp.filename)
+      session$sendCustomMessage(type="displayBedTrack",
+                                message=(list(filename=temp.filename,
+                                              trackName="enhancers",
+                                              color="black",
+                                              trackHeight=40)))
+      } # enhancers
+   if("tss" %in% trackNames) {
+      tss <- mef2c@misc.data$TSS
+      tbl.tss <- data.frame(chrom="chr5", start=tss, end=tss, stringsAsFactors=FALSE)
+      temp.filename <- sprintf("igvdata/tmp%d.bed", as.integer(Sys.time()))
+      write.table(tbl.tss, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE, file=temp.filename)
+      session$sendCustomMessage(type="displayBedTrack",
+                                message=(list(filename=temp.filename,
+                                              trackName="TSS",
+                                              color="blue",
+                                              trackHeight=40)))
+      }
+
+} # displayTrack
+#------------------------------------------------------------------------------------------------------------------------
+intersect <- function(tbl.foreground, tbl.background)
+{
+   stopifnot(colnames(tbl.foreground)[1:3] == c("chrom", "start", "end"))
+   stopifnot(colnames(tbl.background)[1:3] == c("chrom", "start", "end"))
+   tbl.foreground <- tbl.foreground[order(tbl.foreground$start, decreasing=FALSE),]
+   tbl.background <- tbl.background[order(tbl.background$start, decreasing=FALSE),]
+
+   tbl.ov <- as.data.frame(findOverlaps(GRanges(tbl.foreground), GRanges(tbl.background)))
+   colnames(tbl.ov) <- c("foreground", "background")
+
+   tbl.foreground[unique(tbl.ov$foreground),]
+
+} # intersect
+#------------------------------------------------------------------------------------------------------------------------
+# shinyApp(ui, server)

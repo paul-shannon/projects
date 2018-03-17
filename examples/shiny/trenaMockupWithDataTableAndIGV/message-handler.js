@@ -1,3 +1,4 @@
+//------------------------------------------------------------------------------------------------------------------------
 function setupMessageHandlers()
 {
     Shiny.addCustomMessageHandler("roi",
@@ -36,7 +37,34 @@ function setupMessageHandlers()
                                       console.log(config)
                                       window.igvBrowser.loadTrack(config);
                                   })
-}
 
+    Shiny.addCustomMessageHandler("displayBedTrack", displayBedTrack);
+
+} // setupMessageHandlers
+//------------------------------------------------------------------------------------------------------------------------
+function displayBedTrack(message)
+{
+  console.log("displayBedTrack, message:");
+  console.log(message);
+
+  var url = window.location.href + message.filename;
+
+  var config = {format: "bed",
+                name: message.trackName,
+                url: url,
+                indexed: false,
+                displayMode: "SQUISHED",
+                sourceType: "file",
+                color: message.color,
+                height: message.trackHeight,
+                type: "annotation"};
+  console.log("=== about to loadTrack");
+  console.log(config)
+  window.igvBrowser.loadTrack(config);
+
+
+
+} // displayBedTrack
+//------------------------------------------------------------------------------------------------------------------------
 setTimeout(setupMessageHandlers, 5000);
 
