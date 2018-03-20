@@ -1,0 +1,11 @@
+Package: igv
+Title: igv as a shiny widget
+Version: 0.99.5
+Date: 2018-03-20
+Author: Paul Shannon
+Maintainer: Paul Shannon <pshannon@systemsbiology.org>
+Description: igv as a shiny widget
+Depends: R (>= 3.4.2)
+License: MIT
+Encoding: UTF-8
+LazyData: true
