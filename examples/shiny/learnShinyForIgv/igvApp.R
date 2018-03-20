@@ -1,5 +1,5 @@
 library(shiny)
-library(igv)
+library(igvShiny)
 library(htmlwidgets)
 #----------------------------------------------------------------------------------------------------
 ui = shinyUI(fluidPage(
