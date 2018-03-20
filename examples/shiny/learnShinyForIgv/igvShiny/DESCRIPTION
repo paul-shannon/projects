@@ -1,7 +1,7 @@
-Package: igv
+Package: igvShiny
 Title: igv as a shiny widget
-Date: 2018-03-15
-Version: 0.99.2
+Date: 2018-03-20
+Version: 0.99.3
 Author: Paul Shannon
 Maintainer: Paul Shannon <pshannon@systemsbiology.org>
 Description: igv as a shiny widget
