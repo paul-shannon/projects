@@ -58,7 +58,7 @@ ui <- fluidPage(
                    tabPanel(title="IGV",     value="igvTab",       igvShinyOutput('igvShiny')),
                    tabPanel(title="Summary", value="summaryTab",   verbatimTextOutput("summary")),
                    tabPanel(title="TRN",     value="snpTableTab",  DTOutput("geneModelTable")),
-                   tabPanel(title="xyplot",  value="plotTab",     plotOutput("xyPlot", height=800))
+                   tabPanel(title="tf/target plot",  value="plotTab",      plotOutput("xyPlot", height=800))
                    )
        ) # mainPanel
     ) # sidebarLayout
@@ -163,20 +163,26 @@ server <- function(input, output, session) {
      })
 
    observeEvent(input$geneModelTable_cell_clicked, {
+      printf("--- input$geneModelTable_cell_clicked")
       selectedTableRow <- input$geneModelTable_row_last_clicked
       tbl.model <- state$currentModel
       tf <- tbl.model$gene[selectedTableRow]
       printf("table row clicked: %s", tf );
       })
 
-  output$xyplot = renderPlot({
-    s = input$geneModelTable #_rows_selected
-    plot(1:10, (1:10)^2)
-    #par(mar = c(4, 4, 1, .1))
-    #plot(cars)
-    #if (length(s)) points(cars[s, , drop = FALSE], pch = 19, cex = 2)
-    printf("rows selected: %s", s)
-    })
+   output$xyPlot = renderPlot(
+       {#x <- input$geneModelTable_rows_selected
+        print(" ---- renderPlot");
+        #model.name <- input$geneModel;
+        selectedTableRow <- input$geneModelTable_row_last_clicked
+        tbl.model <- state$currentModel
+        tf <- tbl.model$gene[selectedTableRow]
+        printf("want an xyplot of %s vs. FLT1", tf)
+        #tbl.model <- state$currentModel
+        #tf <- tbl.model$gene[selectedTableRow]
+        vec <- sample(1:100, 10)
+        plot(vec, vec^2)
+        })
 
   output$summary <- renderPrint({
     print(input$targetGene)
@@ -188,6 +194,7 @@ server <- function(input, output, session) {
 
    output$geneModelTable <- renderDT(
       {model.name <- input$geneModel;
+       printf("    rendering DT, presumably because input$geneModel changes");
        selection="single"
        tbl.model <- switch(model.name,
           "Enhancers.TFClass" = tbl.model.enhancerAll.tfc,
